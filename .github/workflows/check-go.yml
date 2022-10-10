@@ -1,0 +1,28 @@
+name: 'Check'
+
+on:
+  push:
+    branches:
+      - 'master'
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: github.event_name != 'push'
+    uses: SlashNephy/.github/.github/workflows/go-run.yml@master
+    permissions:
+      contents: 'read'
+    with:
+      task: 'build'
+
+  lint:
+    uses: SlashNephy/.github/.github/workflows/go-lint.yml@master
+    permissions:
+      contents: 'read'
+      pull-requests: 'write'
