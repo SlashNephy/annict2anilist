@@ -4,8 +4,6 @@ import (
 	"context"
 	"log"
 	"time"
-
-	"github.com/hasura/go-graphql-client"
 )
 
 func main() {
@@ -26,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	aniListViewer, err := FetchAniListViewer(ctx, aniList)
+	aniListViewer, err := aniList.FetchViewer(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,8 +35,8 @@ func main() {
 	}
 }
 
-func doLoop(ctx context.Context, cfg *Config, annict, aniList *graphql.Client, aniListUserID int) error {
-	aniListEntries, err := FetchAllAniListEntries(ctx, aniList, aniListUserID)
+func doLoop(ctx context.Context, cfg *Config, annict *AnnictClient, aniList *AniListClient, aniListUserID int) error {
+	aniListEntries, err := aniList.FetchAllEntries(ctx, aniListUserID)
 	if err != nil {
 		log.Fatal(err)
 	}

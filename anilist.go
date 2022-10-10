@@ -9,7 +9,11 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func NewAniListClient(ctx context.Context, config *Config, tokenFile string) (*graphql.Client, error) {
+type AniListClient struct {
+	*graphql.Client
+}
+
+func NewAniListClient(ctx context.Context, config *Config, tokenFile string) (*AniListClient, error) {
 	oauth := &oauth2.Config{
 		ClientID:     config.AniListClientID,
 		ClientSecret: config.AniListClientSecret,
@@ -25,7 +29,9 @@ func NewAniListClient(ctx context.Context, config *Config, tokenFile string) (*g
 		return nil, err
 	}
 
-	return graphql.NewClient("https://graphql.anilist.co", client), nil
+	return &AniListClient{
+		graphql.NewClient("https://graphql.anilist.co", client),
+	}, nil
 }
 
 type AniListViewerQuery struct {
@@ -35,7 +41,7 @@ type AniListViewerQuery struct {
 	} `graphql:"Viewer"`
 }
 
-func FetchAniListViewer(ctx context.Context, client *graphql.Client) (*AniListViewerQuery, error) {
+func (client *AniListClient) FetchViewer(ctx context.Context) (*AniListViewerQuery, error) {
 	var q AniListViewerQuery
 	if err := client.Query(ctx, &q, nil); err != nil {
 		return nil, err
@@ -72,7 +78,7 @@ type MediaListStatus string
 
 var AniListMediaListStatuses = []MediaListStatus{"COMPLETED", "CURRENT", "DROPPED", "PAUSED", "PLANNING", "REPEATING"}
 
-func FetchAniListLibrary(ctx context.Context, client *graphql.Client, userID, chunk int, status MediaListStatus) (*AniListLibraryQuery, error) {
+func (client *AniListClient) FetchLibrary(ctx context.Context, userID, chunk int, status MediaListStatus) (*AniListLibraryQuery, error) {
 	var q AniListLibraryQuery
 	v := map[string]any{
 		"userId":   userID,
@@ -94,7 +100,7 @@ type AniListCreateMediaStatusQuery struct {
 	} `graphql:"SaveMediaListEntry(mediaId: $mediaId, status: $status, progress: $progress, score: $score)"`
 }
 
-func CreateAniListMediaStatus(ctx context.Context, client *graphql.Client, mediaID int, status MediaListStatus, progress int, score float32) error {
+func (client *AniListClient) CreateMediaStatus(ctx context.Context, mediaID int, status MediaListStatus, progress int, score float32) error {
 	var q AniListCreateMediaStatusQuery
 	v := map[string]any{
 		"mediaId":  mediaID,
@@ -115,7 +121,7 @@ type AniListUpdateMediaStatusQuery struct {
 	} `graphql:"UpdateMediaListEntries(ids: [$entryID], status: $status, progress: $progress, score: $score)"`
 }
 
-func UpdateAniListMediaStatus(ctx context.Context, client *graphql.Client, entryID int, status MediaListStatus, progress int, score float32) error {
+func (client *AniListClient) UpdateMediaStatus(ctx context.Context, entryID int, status MediaListStatus, progress int, score float32) error {
 	var q AniListUpdateMediaStatusQuery
 	v := map[string]any{
 		"entryID":  entryID,
@@ -136,7 +142,7 @@ type AniListDeleteMediaStatusQuery struct {
 	} `graphql:"DeleteMediaListEntry(id: $entryId)"`
 }
 
-func DeleteAniListMediaStatus(ctx context.Context, client *graphql.Client, entryID int) error {
+func (client *AniListClient) DeleteMediaStatus(ctx context.Context, entryID int) error {
 	var q AniListDeleteMediaStatusQuery
 	v := map[string]any{
 		"entryId": entryID,
@@ -148,7 +154,7 @@ func DeleteAniListMediaStatus(ctx context.Context, client *graphql.Client, entry
 	return nil
 }
 
-func FetchAllAniListEntries(ctx context.Context, client *graphql.Client, userID int) ([]AniListLibraryEntry, error) {
+func (client *AniListClient) FetchAllEntries(ctx context.Context, userID int) ([]AniListLibraryEntry, error) {
 	var eg errgroup.Group
 	var mutex sync.Mutex
 	var entries []AniListLibraryEntry
@@ -158,7 +164,7 @@ func FetchAllAniListEntries(ctx context.Context, client *graphql.Client, userID 
 		eg.Go(func() error {
 			var chunk = 0
 			for {
-				library, err := FetchAniListLibrary(ctx, client, userID, chunk, status)
+				library, err := client.FetchLibrary(ctx, userID, chunk, status)
 				if err != nil {
 					return err
 				}

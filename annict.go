@@ -7,7 +7,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func NewAnnictClient(ctx context.Context, config *Config, tokenFile string) (*graphql.Client, error) {
+type AnnictClient struct {
+	*graphql.Client
+}
+
+func NewAnnictClient(ctx context.Context, config *Config, tokenFile string) (*AnnictClient, error) {
 	oauth := &oauth2.Config{
 		ClientID:     config.AnnictClientID,
 		ClientSecret: config.AnnictClientSecret,
@@ -24,5 +28,7 @@ func NewAnnictClient(ctx context.Context, config *Config, tokenFile string) (*gr
 		return nil, err
 	}
 
-	return graphql.NewClient("https://api.annict.com/graphql", client), nil
+	return &AnnictClient{
+		graphql.NewClient("https://api.annict.com/graphql", client),
+	}, nil
 }
