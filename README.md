@@ -19,7 +19,7 @@ annict2anilist は [ci7lus/imau](https://github.com/ci7lus/imau) の CLI バー�
 
 | 環境変数                                            | Default | Description                                                                                                                                      |
 |-------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ANNICT_CLIENT_ID`<br/>`ANNICT_CLIENT_SECRET`   | *必須*    | Annict の OAuth クライアントです。[ここ](https://annict.com/oauth/applications) で発行できます。<br/>リダイレクト URI には `urn:ietf:wg:oauth:2.0:oob` を指定してください。            |
+| `ANNICT_CLIENT_ID`<br/>`ANNICT_CLIENT_SECRET`   | *必須*    | Annict の OAuth クライアントです。[ここ](https://annict.com/oauth/applications) で発行できます。<br/>リダイレクト URI には `urn:ietf:wg:oauth:2.0:oob` を指定してください。<br/>スコープは `読み込み専用` で十分です。           |
 | `ANILIST_CLIENT_ID`<br/>`ANILIST_CLIENT_SECRET` | *必須*    | AniList の OAuth クライアントです。[ここ](https://anilist.co/settings/developer) で発行できます。<br/>リダイレクト URI には `https://anilist.co/api/v2/oauth/pin` を指定してください。 |
 | `TOKEN_DIRECTORY`                               | `.`     | トークン情報を格納するディレクトリを指定します。<br/>未指定の場合はカレントディレクトリに格納します。                                                                                            |
 | `INTERVAL_MINUTES`                              | `0`     | 指定した分ごとに同期を行います。<br/>未指定の場合は一度同期して終了します。                                                                                                         |
