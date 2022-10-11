@@ -44,7 +44,6 @@ version: '3.8'
 services:
   app:
     container_name: annict2anilist
-    build: .
     image: ghcr.io/slashnephy/annict2anilist:master
     restart: always
     environment:
