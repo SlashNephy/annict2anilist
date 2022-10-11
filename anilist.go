@@ -61,22 +61,18 @@ type AniListLibraryQuery struct {
 
 type AniListLibraryEntry struct {
 	ID       int             `graphql:"id"`
-	Progress int             `graphql:"progress"`
 	Status   MediaListStatus `graphql:"status"`
-	Score    float32         `graphql:"score"`
+	Progress int             `graphql:"progress"`
 	Media    struct {
 		ID    int `graphql:"id"`
+		IDMal int `graphql:"idMal"`
 		Title struct {
-			Romaji string `graphql:"romaji"`
 			Native string `graphql:"native"`
 		} `graphql:"title"`
 	} `graphql:"media"`
 }
 
 type MediaListSort string
-type MediaListStatus string
-
-var AniListMediaListStatuses = []MediaListStatus{"COMPLETED", "CURRENT", "DROPPED", "PAUSED", "PLANNING", "REPEATING"}
 
 func (client *AniListClient) FetchLibrary(ctx context.Context, userID, chunk int, status MediaListStatus) (*AniListLibraryQuery, error) {
 	var q AniListLibraryQuery
@@ -97,16 +93,15 @@ func (client *AniListClient) FetchLibrary(ctx context.Context, userID, chunk int
 type AniListCreateMediaStatusQuery struct {
 	SaveMediaListEntry struct {
 		ID int `graphql:"id"`
-	} `graphql:"SaveMediaListEntry(mediaId: $mediaId, status: $status, progress: $progress, score: $score)"`
+	} `graphql:"SaveMediaListEntry(mediaId: $mediaId, status: $status, progress: $progress)"`
 }
 
-func (client *AniListClient) CreateMediaStatus(ctx context.Context, mediaID int, status MediaListStatus, progress int, score float32) error {
+func (client *AniListClient) CreateMediaStatus(ctx context.Context, mediaID int, status MediaListStatus, progress int) error {
 	var q AniListCreateMediaStatusQuery
 	v := map[string]any{
 		"mediaId":  mediaID,
 		"status":   status,
 		"progress": progress,
-		"score":    score,
 	}
 	if err := client.Mutate(ctx, &q, v); err != nil {
 		return err
@@ -118,16 +113,15 @@ func (client *AniListClient) CreateMediaStatus(ctx context.Context, mediaID int,
 type AniListUpdateMediaStatusQuery struct {
 	UpdateMediaListEntries []struct {
 		ID int `graphql:"id"`
-	} `graphql:"UpdateMediaListEntries(ids: [$entryID], status: $status, progress: $progress, score: $score)"`
+	} `graphql:"UpdateMediaListEntries(ids: [$entryID], status: $status, progress: $progress)"`
 }
 
-func (client *AniListClient) UpdateMediaStatus(ctx context.Context, entryID int, status MediaListStatus, progress int, score float32) error {
+func (client *AniListClient) UpdateMediaStatus(ctx context.Context, entryID int, status MediaListStatus, progress int) error {
 	var q AniListUpdateMediaStatusQuery
 	v := map[string]any{
 		"entryID":  entryID,
 		"status":   status,
 		"progress": progress,
-		"score":    score,
 	}
 	if err := client.Mutate(ctx, &q, v); err != nil {
 		return err
@@ -159,7 +153,7 @@ func (client *AniListClient) FetchAllEntries(ctx context.Context, userID int) ([
 	var mutex sync.Mutex
 	var entries []AniListLibraryEntry
 
-	for _, s := range AniListMediaListStatuses {
+	for _, s := range []MediaListStatus{AniListCurrentStatus, AniListCompletedStatus, AniListPlanningStatus, AniListPausedStatus, AniListDroppedStatus, AniListRepeatingStatus} {
 		status := s
 		eg.Go(func() error {
 			var chunk = 0
