@@ -25,14 +25,35 @@ annict2anilist は [ci7lus/imau](https://github.com/ci7lus/imau) の CLI バー�
 | `INTERVAL_MINUTES`                              | `0`     | 指定した分ごとに同期を行います。<br/>未指定の場合は一度同期して終了します。                                                                                                         |
 | `DRY_RUN`                                       | `0`     | `1` を指定すると書き込みリクエストを送信しません。デバッグ用です。                                                                                                              |
 
-## Build
+## Build & Run
 
 ```console
 $ make build
+$ make run
 ```
 
-## Run
+## Run (docker-compose.yml)
 
-```console
-$ make run
+以下のような `docker-compose.yml` を用意すると、コンテナとして動作可能になります。
+
+一度 CLI で実行して認可を取得後、`./token` にトークン JSON を配置しておいてください。
+
+```yml
+version: '3.8'
+
+services:
+  app:
+    container_name: annict2anilist
+    build: .
+    image: ghcr.io/slashnephy/annict2anilist:master
+    restart: always
+    environment:
+      ANNICT_CLIENT_ID: xxx
+      ANNICT_CLIENT_SECRET: xxx
+      ANILIST_CLIENT_ID: xxx
+      ANILIST_CLIENT_SECRET: xxx
+      TOKEN_DIRECTORY: /app/token
+      INTERVAL_MINUTES: 5
+    volumes:
+      - ./token:/app/token
 ```
