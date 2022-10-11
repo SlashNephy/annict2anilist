@@ -17,6 +17,7 @@ type Config struct {
 	AniListClientSecret string `env:"ANILIST_CLIENT_SECRET,required"`
 	TokenDirectory      string `env:"TOKEN_DIRECTORY" envDefault:"."`
 	IntervalMinutes     int64  `env:"INTERVAL_MINUTES"`
+	DryRun              bool   `env:"DRY_RUN"`
 }
 
 func LoadConfig() (*Config, error) {
