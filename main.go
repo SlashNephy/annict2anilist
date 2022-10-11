@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -66,7 +67,7 @@ func doLoop(ctx context.Context, cfg *Config, annict *AnnictClient, aniList *Ani
 	}
 	log.Printf("AniList User has %d entries\n", len(aniListEntries))
 
-	if err = ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg.DryRun); err != nil {
+	if err = ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg); err != nil {
 		return err
 	}
 
@@ -87,7 +88,7 @@ type UntetheredEntry struct {
 	Title  string `json:"title"`
 }
 
-func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLibraryEntry, arm *ArmDatabase, aniList *AniListClient, dryRun bool) error {
+func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLibraryEntry, arm *ArmDatabase, aniList *AniListClient, cfg *Config) error {
 	var untethered []UntetheredEntry
 	for _, w := range works {
 		a, found := arm.FindForAniList(w.AnnictID, w.MALAnimeID, w.SyobocalTID)
@@ -118,7 +119,7 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 				log.Printf("Annict[%s, %s, %d] -> AniList[%s, %s, %d]\n", w.Title, w.ViewerStatusState, annictProgress, e.Media.Title.Native, e.Status, e.Progress)
 
 				// AniList のエントリーを更新する
-				if !dryRun {
+				if !cfg.DryRun {
 					if err := aniList.UpdateMediaStatus(ctx, e.ID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
 						return err
 					}
@@ -129,7 +130,7 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 			log.Printf("Annict[%s, %s, %d] -> nil\n", w.Title, w.ViewerStatusState, annictProgress)
 
 			// AniList にエントリーを作成する
-			if !dryRun {
+			if !cfg.DryRun {
 				if err := aniList.CreateMediaStatus(ctx, a.AniListID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
 					return err
 				}
@@ -161,7 +162,9 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 	if err != nil {
 		return err
 	}
-	if err = os.WriteFile("untethered.json", content, 0666); err != nil {
+
+	path := filepath.Join(cfg.TokenDirectory, "untethered.json")
+	if err = os.WriteFile(path, content, 0666); err != nil {
 		return err
 	}
 
