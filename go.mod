@@ -10,7 +10,7 @@ require (
 	github.com/labstack/gommon v0.4.0
 	golang.org/x/exp v0.0.0-20221006183845-316c7553db56
 	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1
-	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
+	golang.org/x/sync v0.1.0
 )
 
 require (
