@@ -27,7 +27,7 @@ func FetchArmDatabase(ctx context.Context) (*ArmDatabase, error) {
 		Timeout: 10 * time.Second,
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "GET", "https://raw.githubusercontent.com/kawaiioverflow/arm/master/arm.json", nil)
+	request, err := http.NewRequestWithContext(ctx, "GET", "https://raw.githubusercontent.com/SlashNephy/arm-supplementary/master/dist/arm.json", nil)
 	if err != nil {
 		return nil, err
 	}
