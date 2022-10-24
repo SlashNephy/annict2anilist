@@ -9,7 +9,7 @@
 - Annict 側がマスターとなり、「視聴ステータス」「話数」が同期されます。
   - Annict 側では登録されているが、AniList で記録がない場合は作成されます。
   - AniList 側では登録されているが、Annict 側で記録がない場合は何もしません。(Annict のデータを操作することはありません。)
-- [kawaiioverflow/arm](https://github.com/kawaiioverflow/arm) を利用して、作品の紐付けを行っています。紐付けができなかった作品データは `untethered.json` に出力されます。
+- [SlashNephy/arm-supplementary](https://github.com/SlashNephy/arm-supplementary) を利用して、作品の紐付けを行っています。紐付けができなかった作品データは `untethered.json` に出力されます。
 
 annict2anilist は [ci7lus/imau](https://github.com/ci7lus/imau) の CLI バージョンです。
 
