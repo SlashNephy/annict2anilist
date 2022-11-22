@@ -8,6 +8,7 @@ require (
 	github.com/hasura/go-graphql-client v0.8.1
 	github.com/joho/godotenv v1.4.0
 	github.com/labstack/gommon v0.4.0
+	go.uber.org/zap v1.23.0
 	golang.org/x/exp v0.0.0-20221006183845-316c7553db56
 	golang.org/x/oauth2 v0.2.0
 	golang.org/x/sync v0.1.0
@@ -18,6 +19,8 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/klauspost/compress v1.10.3 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect

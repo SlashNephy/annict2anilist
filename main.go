@@ -2,50 +2,55 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/goccy/go-json"
+	"go.uber.org/zap"
 )
 
 func main() {
 	ctx := context.Background()
 
+	if err := do(ctx); err != nil {
+		logger.Error("do", zap.Error(err))
+	}
+}
+
+func do(ctx context.Context) error {
 	cfg, err := LoadConfig()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	annict, err := NewAnnictClient(ctx, cfg, "token-annict.json")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	annictViewer, err := annict.FetchViewer(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	log.Printf("Annict User = %s (@%s)\n", annictViewer.Viewer.Name, annictViewer.Viewer.Username)
+	logger.Info("Annict user", zap.String("name", annictViewer.Viewer.Name), zap.String("username", annictViewer.Viewer.Username))
 
 	aniList, err := NewAniListClient(ctx, cfg, "token-anilist.json")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	aniListViewer, err := aniList.FetchViewer(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	log.Printf("AniList User = %s (%d)\n", aniListViewer.Viewer.Name, aniListViewer.Viewer.ID)
+	logger.Info("AniList user", zap.String("name", aniListViewer.Viewer.Name), zap.Int("id", aniListViewer.Viewer.ID))
 
 	if cfg.DryRun {
-		log.Printf("Running in dry run mode\n")
+		logger.Info("running in dry run mode")
 	}
 
-	if err = doLoop(ctx, cfg, annict, aniList, aniListViewer.Viewer.ID); err != nil {
-		log.Fatal(err)
-	}
+	return doLoop(ctx, cfg, annict, aniList, aniListViewer.Viewer.ID)
 }
 
 func doLoop(ctx context.Context, cfg *Config, annict *AnnictClient, aniList *AniListClient, aniListUserID int) error {
@@ -53,19 +58,19 @@ func doLoop(ctx context.Context, cfg *Config, annict *AnnictClient, aniList *Ani
 	if err != nil {
 		return err
 	}
-	log.Printf("kawaiioverflow/arm has %d entries\n", len(arm.Entries))
+	logger.Info("kawaiioverflow/arm entries", zap.Int("len", len(arm.Entries)))
 
 	annictWorks, err := annict.FetchAllWorks(ctx)
 	if err != nil {
 		return err
 	}
-	log.Printf("Annict User has %d works\n", len(annictWorks))
+	logger.Info("Annict user works", zap.Int("len", len(annictWorks)))
 
 	aniListEntries, err := aniList.FetchAllEntries(ctx, aniListUserID)
 	if err != nil {
 		return err
 	}
-	log.Printf("AniList User has %d entries\n", len(aniListEntries))
+	logger.Info("AniList user entries", zap.Int("len", len(aniListEntries)))
 
 	if err = ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg); err != nil {
 		return err
@@ -76,7 +81,7 @@ func doLoop(ctx context.Context, cfg *Config, annict *AnnictClient, aniList *Ani
 	}
 
 	duration := time.Duration(cfg.IntervalMinutes) * time.Minute
-	log.Printf("Sleep %v", duration)
+	logger.Info("sleep", zap.String("duration", duration.String()))
 	time.Sleep(duration)
 
 	return doLoop(ctx, cfg, annict, aniList, aniListUserID)
@@ -93,7 +98,8 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 	for _, w := range works {
 		a, found := arm.FindForAniList(w.AnnictID, w.MALAnimeID, w.SyobocalTID)
 		if !found || a.AniListID == 0 {
-			// log.Printf("arm does not have AniList ID for Annict#%d[%s]. Skipping...", w.AnnictID, w.Title)
+			logger.Debug("arm does not have AniList relation", zap.Int("annict_id", w.AnnictID), zap.String("annict_title", w.Title))
+
 			untethered = append(untethered, UntetheredEntry{
 				Source: "Annict",
 				ID:     w.AnnictID,
@@ -116,7 +122,15 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 			// 差分が存在
 			if !IsSameListStatus(w.ViewerStatusState, e.Status) || e.Progress != annictProgress {
 				// Annict および AniList に含まれている
-				log.Printf("Annict[%s, %s, %d] -> AniList[%s, %s, %d]\n", w.Title, w.ViewerStatusState, annictProgress, e.Media.Title.Native, e.Status, e.Progress)
+				logger.Info(
+					"Annict -> AniList",
+					zap.String("annict_title", w.Title),
+					zap.String("annict_state", string(w.ViewerStatusState)),
+					zap.Int("annict_progress", annictProgress),
+					zap.String("anilist_title", e.Media.Title.Native),
+					zap.String("anilist_state", string(e.Status)),
+					zap.Int("anilist_progress", e.Progress),
+				)
 
 				// AniList のエントリーを更新する
 				if !cfg.DryRun {
@@ -127,7 +141,12 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 			}
 		} else {
 			// Annict のみに含まれている
-			log.Printf("Annict[%s, %s, %d] -> nil\n", w.Title, w.ViewerStatusState, annictProgress)
+			logger.Info(
+				"Annict -> nil",
+				zap.String("annict_title", w.Title),
+				zap.String("annict_state", string(w.ViewerStatusState)),
+				zap.Int("annict_progress", annictProgress),
+			)
 
 			// AniList にエントリーを作成する
 			if !cfg.DryRun {
@@ -141,7 +160,8 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 	for _, e := range entries {
 		a, found := arm.FindForAnnict(e.Media.ID, e.Media.IDMal)
 		if !found || a.AnnictID == 0 {
-			// log.Printf("arm does not have Annict ID for AniList#%d[%s]. Skipping...", e.Media.ID, e.Media.Title.Native)
+			logger.Debug("arm does not have Annict relation", zap.Int("anilist_id", e.Media.ID), zap.String("anilist_title", e.Media.Title.Native))
+
 			untethered = append(untethered, UntetheredEntry{
 				Source: "AniList",
 				ID:     e.Media.ID,
@@ -152,7 +172,12 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 
 		if !Contains(works, func(x AnnictWork) bool { return x.AnnictID == a.AnnictID }) {
 			// AniList のみに含まれている
-			log.Printf("nil -> AniList[%s, %s, %d]\n", e.Media.Title.Native, e.Status, e.Progress)
+			logger.Info(
+				"nil -> AniList",
+				zap.String("anilist_title", e.Media.Title.Native),
+				zap.String("anilist_state", string(e.Status)),
+				zap.Int("anilist_progress", e.Progress),
+			)
 
 			// ひとまず AniList 側から削除することはない
 		}

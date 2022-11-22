@@ -1,6 +1,6 @@
 package main
 
-import "log"
+import "go.uber.org/zap"
 
 type StatusState string
 type MediaListStatus string
@@ -37,7 +37,7 @@ func (s StatusState) ToAniListStatus() MediaListStatus {
 	case AnnictStopWatching:
 		return AniListDroppedStatus
 	default:
-		log.Fatalf("Unexpected StatusState: %s\n", s)
+		logger.Fatal("unexpected StatusState", zap.String("value", string(s)))
 		return ""
 	}
 }
@@ -58,7 +58,7 @@ func (s MediaListStatus) ToAnnictStatus() StatusState {
 		// Repeating は Watching 扱いとする
 		return AnnictWatchingStatus
 	default:
-		log.Fatalf("Unexpected MediaListStatus: %s\n", s)
+		logger.Fatal("unexpected MediaListStatus", zap.String("value", string(s)))
 		return ""
 	}
 }
