@@ -9,7 +9,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/labstack/gommon v0.4.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/exp v0.0.0-20221006183845-316c7553db56
+	golang.org/x/exp v0.0.0-20230108222341-4b8118a2686a
 	golang.org/x/oauth2 v0.3.0
 	golang.org/x/sync v0.1.0
 )
