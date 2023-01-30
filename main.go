@@ -134,14 +134,8 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 
 				// AniList のエントリーを更新する
 				if !cfg.DryRun {
-					if cfg.UpdateInsteadOfCreate {
-						if err := aniList.UpdateMediaStatus(ctx, e.ID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
-							return err
-						}
-					} else {
-						if err := aniList.CreateMediaStatus(ctx, e.Media.ID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
-							return err
-						}
+					if err := aniList.SaveMediaListEntry(ctx, e.Media.ID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
+						return err
 					}
 				}
 			}
@@ -156,7 +150,7 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 
 			// AniList にエントリーを作成する
 			if !cfg.DryRun {
-				if err := aniList.CreateMediaStatus(ctx, a.AniListID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
+				if err := aniList.SaveMediaListEntry(ctx, a.AniListID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
 					return err
 				}
 			}

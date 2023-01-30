@@ -90,16 +90,16 @@ func (client *AniListClient) FetchLibrary(ctx context.Context, userID, chunk int
 	return &q, nil
 }
 
-type AniListCreateMediaStatusQuery struct {
+type AniListSaveMediaListEntryQuery struct {
 	SaveMediaListEntry struct {
 		ID int `graphql:"id"`
-	} `graphql:"SaveMediaListEntry(mediaId: $mediaId, status: $status, progress: $progress)"`
+	} `graphql:"SaveMediaListEntry(mediaId: $mediaID, status: $status, progress: $progress)"`
 }
 
-func (client *AniListClient) CreateMediaStatus(ctx context.Context, mediaID int, status MediaListStatus, progress int) error {
-	var q AniListCreateMediaStatusQuery
+func (client *AniListClient) SaveMediaListEntry(ctx context.Context, mediaID int, status MediaListStatus, progress int) error {
+	var q AniListSaveMediaListEntryQuery
 	v := map[string]any{
-		"mediaId":  mediaID,
+		"mediaID":  mediaID,
 		"status":   status,
 		"progress": progress,
 	}
@@ -110,36 +110,16 @@ func (client *AniListClient) CreateMediaStatus(ctx context.Context, mediaID int,
 	return nil
 }
 
-type AniListUpdateMediaStatusQuery struct {
-	UpdateMediaListEntries []struct {
-		ID int `graphql:"id"`
-	} `graphql:"UpdateMediaListEntries(ids: [$entryID], status: $status, progress: $progress)"`
-}
-
-func (client *AniListClient) UpdateMediaStatus(ctx context.Context, entryID int, status MediaListStatus, progress int) error {
-	var q AniListUpdateMediaStatusQuery
-	v := map[string]any{
-		"entryID":  entryID,
-		"status":   status,
-		"progress": progress,
-	}
-	if err := client.Mutate(ctx, &q, v); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-type AniListDeleteMediaStatusQuery struct {
+type AniListDeleteMediaListEntryQuery struct {
 	DeleteMediaListEntry struct {
 		Deleted bool `graphql:"deleted"`
-	} `graphql:"DeleteMediaListEntry(id: $entryId)"`
+	} `graphql:"DeleteMediaListEntry(id: id)"`
 }
 
-func (client *AniListClient) DeleteMediaStatus(ctx context.Context, entryID int) error {
-	var q AniListDeleteMediaStatusQuery
+func (client *AniListClient) DeleteMediaListEntry(ctx context.Context, id int) error {
+	var q AniListDeleteMediaListEntryQuery
 	v := map[string]any{
-		"entryId": entryID,
+		"id": id,
 	}
 	if err := client.Mutate(ctx, &q, v); err != nil {
 		return err

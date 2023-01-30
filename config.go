@@ -11,14 +11,13 @@ import (
 const UserAgent = "annict2anilist/1.0 (+https://github.com/SlashNephy/annict2anilist)"
 
 type Config struct {
-	AnnictClientID        string `env:"ANNICT_CLIENT_ID,required"`
-	AnnictClientSecret    string `env:"ANNICT_CLIENT_SECRET,required"`
-	AniListClientID       string `env:"ANILIST_CLIENT_ID,required"`
-	AniListClientSecret   string `env:"ANILIST_CLIENT_SECRET,required"`
-	TokenDirectory        string `env:"TOKEN_DIRECTORY" envDefault:"."`
-	IntervalMinutes       int64  `env:"INTERVAL_MINUTES"`
-	DryRun                bool   `env:"DRY_RUN"`
-	UpdateInsteadOfCreate bool   `env:"UPDATE_INSTEAD_OF_CREATE"`
+	AnnictClientID      string `env:"ANNICT_CLIENT_ID,required"`
+	AnnictClientSecret  string `env:"ANNICT_CLIENT_SECRET,required"`
+	AniListClientID     string `env:"ANILIST_CLIENT_ID,required"`
+	AniListClientSecret string `env:"ANILIST_CLIENT_SECRET,required"`
+	TokenDirectory      string `env:"TOKEN_DIRECTORY" envDefault:"."`
+	IntervalMinutes     int64  `env:"INTERVAL_MINUTES"`
+	DryRun              bool   `env:"DRY_RUN"`
 }
 
 func LoadConfig() (*Config, error) {
