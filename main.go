@@ -8,13 +8,14 @@ import (
 
 	"github.com/goccy/go-json"
 	"go.uber.org/zap"
+	"golang.org/x/exp/slices"
 )
 
 func main() {
 	ctx := context.Background()
 
 	if err := do(ctx); err != nil {
-		logger.Error("do", zap.Error(err))
+		logger.Fatal("do", zap.Error(err))
 	}
 }
 
@@ -119,6 +120,11 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 		}
 
 		if found {
+			// 除外
+			if slices.Contains(cfg.IgnoredAnnictIds, w.AnnictID) || slices.Contains(cfg.IgnoredAniListIds, e.Media.ID) {
+				continue
+			}
+
 			// 差分が存在
 			if !IsSameListStatus(w.ViewerStatusState, e.Status) || e.Progress != annictProgress {
 				// Annict および AniList に含まれている
@@ -142,6 +148,11 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 				}
 			}
 		} else {
+			// 除外
+			if slices.Contains(cfg.IgnoredAnnictIds, w.AnnictID) {
+				continue
+			}
+
 			// Annict のみに含まれている
 			logger.Info(
 				"Annict -> nil",
@@ -174,6 +185,11 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 		}
 
 		if !Contains(works, func(x AnnictWork) bool { return x.AnnictID == a.AnnictID }) {
+			// 除外
+			if slices.Contains(cfg.IgnoredAniListIds, e.Media.ID) {
+				continue
+			}
+
 			// AniList のみに含まれている
 			logger.Info(
 				"nil -> AniList",
