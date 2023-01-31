@@ -127,9 +127,11 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 					zap.String("annict_title", w.Title),
 					zap.String("annict_state", string(w.ViewerStatusState)),
 					zap.Int("annict_progress", annictProgress),
+					zap.Int("annict_id", w.AnnictID),
 					zap.String("anilist_title", e.Media.Title.Native),
 					zap.String("anilist_state", string(e.Status)),
 					zap.Int("anilist_progress", e.Progress),
+					zap.Int("anilist_id", e.Media.ID),
 				)
 
 				// AniList のエントリーを更新する
@@ -146,6 +148,7 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 				zap.String("annict_title", w.Title),
 				zap.String("annict_state", string(w.ViewerStatusState)),
 				zap.Int("annict_progress", annictProgress),
+				zap.Int("annict_id", w.AnnictID),
 			)
 
 			// AniList にエントリーを作成する
@@ -177,6 +180,7 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 				zap.String("anilist_title", e.Media.Title.Native),
 				zap.String("anilist_state", string(e.Status)),
 				zap.Int("anilist_progress", e.Progress),
+				zap.Int("anilist_id", e.Media.ID),
 			)
 
 			// ひとまず AniList 側から削除することはない
