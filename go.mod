@@ -6,7 +6,7 @@ require (
 	github.com/caarlos0/env/v7 v7.0.0
 	github.com/goccy/go-json v0.10.0
 	github.com/hasura/go-graphql-client v0.8.1
-	github.com/joho/godotenv v1.4.0
+	github.com/joho/godotenv v1.5.0
 	github.com/labstack/gommon v0.4.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230129154200-a960b3787bd2
