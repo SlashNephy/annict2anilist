@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/caarlos0/env/v7 v7.1.0
-	github.com/goccy/go-json v0.10.0
+	github.com/goccy/go-json v0.10.1
 	github.com/hasura/go-graphql-client v0.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/gommon v0.4.0
