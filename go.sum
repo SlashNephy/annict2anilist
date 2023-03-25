@@ -55,6 +55,8 @@ github.com/hasura/go-graphql-client v0.9.0 h1:IPL+8CjLrTw4lAJno6qP6e9Nz64+fHSwJT
 github.com/hasura/go-graphql-client v0.9.0/go.mod h1:jlTUQWgTJOI4opQssMlCkzVjpRVSyL+PQsTjkAwcr3w=
 github.com/hasura/go-graphql-client v0.9.1 h1:RBnaMLdK+muvauxcRitn73BzWnYWzWpKQ3n++eG2+wk=
 github.com/hasura/go-graphql-client v0.9.1/go.mod h1:AarJlxO1I59MPqU/TC7gQP0BMFgPEqUTt5LYPvykasw=
+github.com/hasura/go-graphql-client v0.9.2 h1:4FyAeVOu+GcS1BaoELWNyxzaLY7s+g72LLH+qYItdEY=
+github.com/hasura/go-graphql-client v0.9.2/go.mod h1:AarJlxO1I59MPqU/TC7gQP0BMFgPEqUTt5LYPvykasw=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
 github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/json-iterator/go v1.1.9 h1:9yzud/Ht36ygwatGx56VwCZtlI/2AD15T1X2sjSuGns=
