@@ -184,7 +184,7 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 			continue
 		}
 
-		if !Contains(works, func(x AnnictWork) bool { return x.AnnictID == a.AnnictID }) {
+		if !slices.ContainsFunc(works, func(x AnnictWork) bool { return x.AnnictID == a.AnnictID }) {
 			// 除外
 			if slices.Contains(cfg.IgnoredAniListIds, e.Media.ID) {
 				continue

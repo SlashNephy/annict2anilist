@@ -13,10 +13,6 @@ func CountByKey[T any](slice []T, key func(T) bool) int {
 	return count
 }
 
-func Contains[T any](slice []T, key func(T) bool) bool {
-	return slices.IndexFunc(slice, key) >= 0
-}
-
 func FindByKey[T any](slice []T, key func(T) bool) (*T, bool) {
 	index := slices.IndexFunc(slice, key)
 	if index < 0 {
