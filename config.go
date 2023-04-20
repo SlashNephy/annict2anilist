@@ -20,9 +20,9 @@ type Config struct {
 	TokenDirectory       string `env:"TOKEN_DIRECTORY" envDefault:"."`
 	IntervalMinutes      int64  `env:"INTERVAL_MINUTES"`
 	DryRun               bool   `env:"DRY_RUN"`
-	IgnoredAnnictIds     []int
+	IgnoredAnnictIds     []int  `env:"-"`
 	RawIgnoredAnnictIds  string `env:"IGNORED_ANNICT_IDS"`
-	IgnoredAniListIds    []int
+	IgnoredAniListIds    []int  `env:"-"`
 	RawIgnoredAniListIds string `env:"IGNORED_ANILIST_IDS"`
 }
 
