@@ -59,7 +59,7 @@ func doLoop(ctx context.Context, cfg *Config, annict *AnnictClient, aniList *Ani
 	if err != nil {
 		return err
 	}
-	logger.Info("kawaiioverflow/arm entries", zap.Int("len", len(arm.Entries)))
+	logger.Info("arm-supplementary entries", zap.Int("len", len(arm.Entries)))
 
 	annictWorks, err := annict.FetchAllWorks(ctx)
 	if err != nil {
@@ -120,16 +120,28 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 		}
 
 		if found {
-			// 除外
-			if slices.Contains(cfg.IgnoredAnnictIds, w.AnnictID) || slices.Contains(cfg.IgnoredAniListIds, e.Media.ID) {
-				continue
-			}
-
 			// 差分が存在
 			if !IsSameListStatus(w.ViewerStatusState, e.Status) || e.Progress != annictProgress {
+				// 作品が終了していて、どちらのステータスも Completed になっている場合は Progress の更新を行わない
+				// AniList は Completed にした作品の Progress を自動的に更新する
+				if e.Media.Status == MediaStatusFinished && w.ViewerStatusState == AnnictWatchedStatus && e.Status == AniListCompletedStatus {
+					logger.Debug("already completed",
+						zap.String("annict_title", w.Title),
+						zap.String("annict_state", string(w.ViewerStatusState)),
+						zap.Int("annict_progress", annictProgress),
+						zap.Int("annict_id", w.AnnictID),
+						zap.String("anilist_title", e.Media.Title.Native),
+						zap.String("anilist_state", string(e.Status)),
+						zap.Int("anilist_progress", e.Progress),
+						zap.Int("anilist_id", e.Media.ID),
+					)
+					continue
+				}
+
 				// Annict および AniList に含まれている
 				logger.Info(
 					"Annict -> AniList",
+					zap.String("media_status", string(e.Media.Status)),
 					zap.String("annict_title", w.Title),
 					zap.String("annict_state", string(w.ViewerStatusState)),
 					zap.Int("annict_progress", annictProgress),
@@ -149,11 +161,6 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 				}
 			}
 		} else {
-			// 除外
-			if slices.Contains(cfg.IgnoredAnnictIds, w.AnnictID) {
-				continue
-			}
-
 			// Annict のみに含まれている
 			logger.Info(
 				"Annict -> nil",
@@ -187,11 +194,6 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 		}
 
 		if !slices.ContainsFunc(works, func(x AnnictWork) bool { return x.AnnictID == a.AnnictID }) {
-			// 除外
-			if slices.Contains(cfg.IgnoredAniListIds, e.Media.ID) {
-				continue
-			}
-
 			// AniList のみに含まれている
 			logger.Info(
 				"nil -> AniList",

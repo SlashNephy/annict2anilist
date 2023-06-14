@@ -59,6 +59,10 @@ type AniListLibraryQuery struct {
 	} `graphql:"MediaListCollection(userId: $userId, sort: $sort, perChunk: $perChunk, chunk: $chunk, type: ANIME, forceSingleCompletedList: true, status: $status)"`
 }
 
+type MediaStatus string
+
+const MediaStatusFinished MediaStatus = "FINISHED"
+
 type AniListLibraryEntry struct {
 	ID       int             `graphql:"id"`
 	Status   MediaListStatus `graphql:"status"`
@@ -69,16 +73,20 @@ type AniListLibraryEntry struct {
 		Title struct {
 			Native string `graphql:"native"`
 		} `graphql:"title"`
+		Episodes int         `graphql:"episodes"`
+		Status   MediaStatus `graphql:"status"`
 	} `graphql:"media"`
 }
 
 type MediaListSort string
 
+const MediaListSortStartedOn MediaListSort = "STARTED_ON"
+
 func (client *AniListClient) FetchLibrary(ctx context.Context, userID, chunk int, status MediaListStatus) (*AniListLibraryQuery, error) {
 	var q AniListLibraryQuery
 	v := map[string]any{
 		"userId":   userID,
-		"sort":     []MediaListSort{"STARTED_ON"},
+		"sort":     []MediaListSort{MediaListSortStartedOn},
 		"perChunk": 500,
 		"chunk":    chunk,
 		"status":   status,
