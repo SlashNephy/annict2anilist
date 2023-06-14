@@ -143,7 +143,8 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 				// AniList のエントリーを更新する
 				if !cfg.DryRun {
 					if err := aniList.SaveMediaListEntry(ctx, e.Media.ID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
-						return err
+						logger.Error("failed to save AniList entry", zap.Error(err))
+						continue
 					}
 				}
 			}
@@ -165,7 +166,8 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 			// AniList にエントリーを作成する
 			if !cfg.DryRun {
 				if err := aniList.SaveMediaListEntry(ctx, a.AniListID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
-					return err
+					logger.Error("failed to save AniList entry", zap.Error(err))
+					continue
 				}
 			}
 		}
@@ -209,9 +211,5 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 	}
 
 	path := filepath.Join(cfg.TokenDirectory, "untethered.json")
-	if err = os.WriteFile(path, content, 0666); err != nil {
-		return err
-	}
-
-	return nil
+	return os.WriteFile(path, content, 0666)
 }
