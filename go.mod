@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/caarlos0/env/v7 v7.1.0
 	github.com/goccy/go-json v0.10.2
-	github.com/hasura/go-graphql-client v0.9.3
+	github.com/hasura/go-graphql-client v0.10.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/gommon v0.4.0
 	go.uber.org/zap v1.25.0
@@ -17,8 +17,7 @@ require (
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/klauspost/compress v1.10.3 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
