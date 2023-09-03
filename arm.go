@@ -4,11 +4,11 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"time"
 
 	"github.com/goccy/go-json"
-	"golang.org/x/exp/slices"
 )
 
 type ArmDatabase struct {

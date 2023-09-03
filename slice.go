@@ -1,6 +1,6 @@
 package main
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 func CountByKey[T any](slice []T, key func(T) bool) int {
 	count := 0

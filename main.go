@@ -2,20 +2,20 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/goccy/go-json"
-	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 )
 
 func main() {
 	ctx := context.Background()
 
 	if err := do(ctx); err != nil {
-		logger.Fatal("do", zap.Error(err))
+		panic(err)
 	}
 }
 
@@ -34,7 +34,7 @@ func do(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	logger.Info("Annict user", zap.String("name", annictViewer.Viewer.Name), zap.String("username", annictViewer.Viewer.Username))
+	logger.Info("Annict user", slog.String("name", annictViewer.Viewer.Name), slog.String("username", annictViewer.Viewer.Username))
 
 	aniList, err := NewAniListClient(ctx, cfg, "token-anilist.json")
 	if err != nil {
@@ -45,7 +45,7 @@ func do(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	logger.Info("AniList user", zap.String("name", aniListViewer.Viewer.Name), zap.Int("id", aniListViewer.Viewer.ID))
+	logger.Info("AniList user", slog.String("name", aniListViewer.Viewer.Name), slog.Int("id", aniListViewer.Viewer.ID))
 
 	if cfg.DryRun {
 		logger.Info("running in dry run mode")
@@ -59,19 +59,19 @@ func doLoop(ctx context.Context, cfg *Config, annict *AnnictClient, aniList *Ani
 	if err != nil {
 		return err
 	}
-	logger.Info("arm-supplementary entries", zap.Int("len", len(arm.Entries)))
+	logger.Info("arm-supplementary entries", slog.Int("len", len(arm.Entries)))
 
 	annictWorks, err := annict.FetchAllWorks(ctx)
 	if err != nil {
 		return err
 	}
-	logger.Info("Annict user works", zap.Int("len", len(annictWorks)))
+	logger.Info("Annict user works", slog.Int("len", len(annictWorks)))
 
 	aniListEntries, err := aniList.FetchAllEntries(ctx, aniListUserID)
 	if err != nil {
 		return err
 	}
-	logger.Info("AniList user entries", zap.Int("len", len(aniListEntries)))
+	logger.Info("AniList user entries", slog.Int("len", len(aniListEntries)))
 
 	if err = ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg); err != nil {
 		return err
@@ -82,7 +82,7 @@ func doLoop(ctx context.Context, cfg *Config, annict *AnnictClient, aniList *Ani
 	}
 
 	duration := time.Duration(cfg.IntervalMinutes) * time.Minute
-	logger.Info("sleep", zap.String("duration", duration.String()))
+	logger.Info("sleep", slog.String("duration", duration.String()))
 	time.Sleep(duration)
 
 	return doLoop(ctx, cfg, annict, aniList, aniListUserID)
@@ -99,7 +99,7 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 	for _, w := range works {
 		a, found := arm.FindForAniList(w.AnnictID, w.MALAnimeID, w.SyobocalTID)
 		if !found || a.AniListID == 0 {
-			logger.Debug("arm does not have AniList relation", zap.Int("annict_id", w.AnnictID), zap.String("annict_title", w.Title))
+			logger.Debug("arm does not have AniList relation", slog.Int("annict_id", w.AnnictID), slog.String("annict_title", w.Title))
 
 			untethered = append(untethered, UntetheredEntry{
 				Source: "Annict",
@@ -126,14 +126,14 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 				// AniList は Completed にした作品の Progress を自動的に更新する
 				if e.Media.Status == MediaStatusFinished && w.ViewerStatusState == AnnictWatchedStatus && e.Status == AniListCompletedStatus {
 					logger.Debug("already completed",
-						zap.String("annict_title", w.Title),
-						zap.String("annict_state", string(w.ViewerStatusState)),
-						zap.Int("annict_progress", annictProgress),
-						zap.Int("annict_id", w.AnnictID),
-						zap.String("anilist_title", e.Media.Title.Native),
-						zap.String("anilist_state", string(e.Status)),
-						zap.Int("anilist_progress", e.Progress),
-						zap.Int("anilist_id", e.Media.ID),
+						slog.String("annict_title", w.Title),
+						slog.String("annict_state", string(w.ViewerStatusState)),
+						slog.Int("annict_progress", annictProgress),
+						slog.Int("annict_id", w.AnnictID),
+						slog.String("anilist_title", e.Media.Title.Native),
+						slog.String("anilist_state", string(e.Status)),
+						slog.Int("anilist_progress", e.Progress),
+						slog.Int("anilist_id", e.Media.ID),
 					)
 					continue
 				}
@@ -141,21 +141,21 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 				// Annict および AniList に含まれている
 				logger.Info(
 					"Annict -> AniList",
-					zap.String("media_status", string(e.Media.Status)),
-					zap.String("annict_title", w.Title),
-					zap.String("annict_state", string(w.ViewerStatusState)),
-					zap.Int("annict_progress", annictProgress),
-					zap.Int("annict_id", w.AnnictID),
-					zap.String("anilist_title", e.Media.Title.Native),
-					zap.String("anilist_state", string(e.Status)),
-					zap.Int("anilist_progress", e.Progress),
-					zap.Int("anilist_id", e.Media.ID),
+					slog.String("media_status", string(e.Media.Status)),
+					slog.String("annict_title", w.Title),
+					slog.String("annict_state", string(w.ViewerStatusState)),
+					slog.Int("annict_progress", annictProgress),
+					slog.Int("annict_id", w.AnnictID),
+					slog.String("anilist_title", e.Media.Title.Native),
+					slog.String("anilist_state", string(e.Status)),
+					slog.Int("anilist_progress", e.Progress),
+					slog.Int("anilist_id", e.Media.ID),
 				)
 
 				// AniList のエントリーを更新する
 				if !cfg.DryRun {
 					if err := aniList.SaveMediaListEntry(ctx, e.Media.ID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
-						logger.Error("failed to save AniList entry", zap.Error(err))
+						logger.Error("failed to save AniList entry", slog.Any("err", err))
 						continue
 					}
 				}
@@ -164,16 +164,16 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 			// Annict のみに含まれている
 			logger.Info(
 				"Annict -> nil",
-				zap.String("annict_title", w.Title),
-				zap.String("annict_state", string(w.ViewerStatusState)),
-				zap.Int("annict_progress", annictProgress),
-				zap.Int("annict_id", w.AnnictID),
+				slog.String("annict_title", w.Title),
+				slog.String("annict_state", string(w.ViewerStatusState)),
+				slog.Int("annict_progress", annictProgress),
+				slog.Int("annict_id", w.AnnictID),
 			)
 
 			// AniList にエントリーを作成する
 			if !cfg.DryRun {
 				if err := aniList.SaveMediaListEntry(ctx, a.AniListID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
-					logger.Error("failed to save AniList entry", zap.Error(err))
+					logger.Error("failed to save AniList entry", slog.Any("err", err))
 					continue
 				}
 			}
@@ -183,7 +183,7 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 	for _, e := range entries {
 		a, found := arm.FindForAnnict(e.Media.ID, e.Media.IDMal)
 		if !found || a.AnnictID == 0 {
-			logger.Debug("arm does not have Annict relation", zap.Int("anilist_id", e.Media.ID), zap.String("anilist_title", e.Media.Title.Native))
+			logger.Debug("arm does not have Annict relation", slog.Int("anilist_id", e.Media.ID), slog.String("anilist_title", e.Media.Title.Native))
 
 			untethered = append(untethered, UntetheredEntry{
 				Source: "AniList",
@@ -197,10 +197,10 @@ func ExecuteUpdate(ctx context.Context, works []AnnictWork, entries []AniListLib
 			// AniList のみに含まれている
 			logger.Info(
 				"nil -> AniList",
-				zap.String("anilist_title", e.Media.Title.Native),
-				zap.String("anilist_state", string(e.Status)),
-				zap.Int("anilist_progress", e.Progress),
-				zap.Int("anilist_id", e.Media.ID),
+				slog.String("anilist_title", e.Media.Title.Native),
+				slog.String("anilist_state", string(e.Status)),
+				slog.Int("anilist_progress", e.Progress),
+				slog.Int("anilist_id", e.Media.ID),
 			)
 
 			// ひとまず AniList 側から削除することはない
