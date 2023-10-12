@@ -14,8 +14,19 @@ type Client struct {
 	client *graphql.Client
 }
 
-func NewClient(ctx context.Context, config *config.Config, tokenFile string) (*Client, error) {
-	oauth := &oauth2.Config{
+func NewClient(ctx context.Context, config *config.Config) (*Client, error) {
+	client, err := external.NewOAuth2Client(ctx, NewOAuth2Config(config), config, "token-anilist.json")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Client{
+		client: graphql.NewClient("https://graphql.anilist.co", client),
+	}, nil
+}
+
+func NewOAuth2Config(config *config.Config) *oauth2.Config {
+	return &oauth2.Config{
 		ClientID:     config.AniListClientID,
 		ClientSecret: config.AniListClientSecret,
 		RedirectURL:  "https://anilist.co/api/v2/oauth/pin",
@@ -24,13 +35,4 @@ func NewClient(ctx context.Context, config *config.Config, tokenFile string) (*C
 			TokenURL: "https://anilist.co/api/v2/oauth/token",
 		},
 	}
-
-	client, err := external.NewOAuth2Client(ctx, oauth, config, tokenFile)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{
-		client: graphql.NewClient("https://graphql.anilist.co", client),
-	}, nil
 }

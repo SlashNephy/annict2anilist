@@ -33,7 +33,7 @@ func do(ctx context.Context) error {
 		return err
 	}
 
-	annict, err := annict.NewClient(ctx, cfg, "token-annict.json")
+	annict, err := annict.NewClient(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func do(ctx context.Context) error {
 	}
 	slog.Info("Annict user", slog.String("name", annictViewer.Viewer.Name), slog.String("username", annictViewer.Viewer.Username))
 
-	aniList, err := anilist.NewClient(ctx, cfg, "token-anilist.json")
+	aniList, err := anilist.NewClient(ctx, cfg)
 	if err != nil {
 		return err
 	}

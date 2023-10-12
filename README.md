@@ -25,11 +25,24 @@ annict2anilist は [ci7lus/imau](https://github.com/ci7lus/imau) の CLI バー�
 | `INTERVAL_MINUTES`                              | `0`     | 指定した分ごとに同期を行います。<br/>未指定の場合は一度同期して終了します。                                                                                                         |
 | `DRY_RUN`                                       | `0`     | `1` を指定すると書き込みリクエストを送信しません。デバッグ用です。                                                                                                              |
 
-## Build & Run
+## Build
 
 ```console
 $ make build
-$ make run
+```
+
+## Run
+
+初回起動時は認可を行うため、CLI で以下のコマンドを実行します。
+
+```console
+$ make run-authorize
+```
+
+以下のコマンドを実行すると同期が行われます。
+
+```console
+$ make run-batch
 ```
 
 ## Run (docker-compose.yml)
