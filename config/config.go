@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"flag"
@@ -31,10 +31,10 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
-	cfg := &Config{}
-	if err := env.Parse(cfg); err != nil {
+	var cfg Config
+	if err := env.Parse(&cfg); err != nil {
 		return nil, err
 	}
 
-	return cfg, nil
+	return &cfg, nil
 }

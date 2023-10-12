@@ -1,4 +1,4 @@
-package main
+package external
 
 import (
 	"context"
@@ -11,9 +11,11 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/labstack/gommon/random"
 	"golang.org/x/oauth2"
+
+	"github.com/SlashNephy/annict2anilist/config"
 )
 
-func NewOAuth2Client(ctx context.Context, oauth *oauth2.Config, config *Config, tokenFile string) (*http.Client, error) {
+func NewOAuth2Client(ctx context.Context, oauth *oauth2.Config, config *config.Config, tokenFile string) (*http.Client, error) {
 	path := filepath.Join(config.TokenDirectory, tokenFile)
 
 	var token *oauth2.Token

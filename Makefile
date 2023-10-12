@@ -1,5 +1,13 @@
-build:
-	go build -o annict2anilist ./*.go
+build: build-batch build-authorize
 
-run:
-	go run ./*.go
+build-batch:
+	go build -o batch ./cmd/batch
+
+build-authorize:
+	go build -o authorize ./cmd/authorize
+
+run-batch:
+	go run ./cmd/batch
+
+run-authorize:
+	go run ./cmd/authorize
