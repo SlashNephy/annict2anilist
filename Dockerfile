@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY ./ ./
-RUN make build
+RUN make build-batch
 
 FROM debian:bullseye-slim@sha256:9bec46ecd98ce4bf8305840b021dda9b3e1f8494a0768c407e2b233180fa1466
 WORKDIR /app
@@ -19,5 +19,5 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 USER app
-COPY --from=build /app/annict2anilist ./
-CMD ["./annict2anilist"]
+COPY --from=build /app/batch ./
+CMD ["./batch"]
