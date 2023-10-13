@@ -15,7 +15,7 @@ func (c *Client) SaveMediaListEntry(ctx context.Context, mediaID int, status sta
 	var mutation SaveMediaListEntryMutation
 	variables := map[string]any{
 		"mediaID":  mediaID,
-		"status":   status,
+		"status":   MediaListStatus(status),
 		"progress": progress,
 	}
 	if err := c.client.Mutate(ctx, &mutation, variables); err != nil {

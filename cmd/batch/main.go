@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/SlashNephy/annict2anilist/domain/status"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/SlashNephy/annict2anilist/config"
+	"github.com/SlashNephy/annict2anilist/domain/status"
 	"github.com/SlashNephy/annict2anilist/external/anilist"
 	"github.com/SlashNephy/annict2anilist/external/annict"
 	"github.com/SlashNephy/annict2anilist/external/arm"
@@ -102,7 +102,7 @@ type UntetheredEntry struct {
 	Title  string `json:"title"`
 }
 
-func ExecuteUpdate(ctx context.Context, works []*annict.Work, entries []*anilist.LibraryEntry, arm *arm.ArmDatabase, aniList *anilist.Client, cfg *config.Config) error {
+func ExecuteUpdate(ctx context.Context, works []annict.Work, entries []anilist.LibraryEntry, arm *arm.ArmDatabase, aniList *anilist.Client, cfg *config.Config) error {
 	var untethered []UntetheredEntry
 	for _, w := range works {
 		a, found := arm.FindForAniList(w.AnnictID, w.MALAnimeID, w.SyobocalTID)
@@ -117,7 +117,7 @@ func ExecuteUpdate(ctx context.Context, works []*annict.Work, entries []*anilist
 			continue
 		}
 
-		e, found := lo.Find(entries, func(x *anilist.LibraryEntry) bool { return x.Media.ID == a.AniListID })
+		e, found := lo.Find(entries, func(x anilist.LibraryEntry) bool { return x.Media.ID == a.AniListID })
 
 		var annictProgress int
 		if w.NoEpisodes && w.ViewerStatusState == status.AnnictWatched {
@@ -201,7 +201,7 @@ func ExecuteUpdate(ctx context.Context, works []*annict.Work, entries []*anilist
 			continue
 		}
 
-		if !slices.ContainsFunc(works, func(x *annict.Work) bool { return x.AnnictID == a.AnnictID }) {
+		if !slices.ContainsFunc(works, func(x annict.Work) bool { return x.AnnictID == a.AnnictID }) {
 			// AniList のみに含まれている
 			slog.Info(
 				"nil -> AniList",

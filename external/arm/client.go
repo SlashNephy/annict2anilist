@@ -12,7 +12,7 @@ import (
 )
 
 type ArmDatabase struct {
-	Entries []*ArmEntry
+	Entries []ArmEntry
 }
 
 type ArmEntry struct {
@@ -45,7 +45,7 @@ func FetchArmDatabase(ctx context.Context) (*ArmDatabase, error) {
 		return nil, err
 	}
 
-	var entries []*ArmEntry
+	var entries []ArmEntry
 	if err = json.Unmarshal(body, &entries); err != nil {
 		return nil, err
 	}

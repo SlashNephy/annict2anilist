@@ -10,14 +10,14 @@ func (d *ArmDatabase) FindByAnnictID(id int) (*ArmEntry, bool) {
 		return nil, false
 	}
 
-	index := slices.IndexFunc(d.Entries, func(entry *ArmEntry) bool {
+	index := slices.IndexFunc(d.Entries, func(entry ArmEntry) bool {
 		return entry.AnnictID != 0 && entry.AnnictID == id
 	})
 	if index < 0 {
 		return nil, false
 	}
 
-	return d.Entries[index], true
+	return &d.Entries[index], true
 }
 
 func (d *ArmDatabase) FindByAniListID(id int) (*ArmEntry, bool) {
@@ -25,14 +25,14 @@ func (d *ArmDatabase) FindByAniListID(id int) (*ArmEntry, bool) {
 		return nil, false
 	}
 
-	index := slices.IndexFunc(d.Entries, func(entry *ArmEntry) bool {
+	index := slices.IndexFunc(d.Entries, func(entry ArmEntry) bool {
 		return entry.AniListID != 0 && entry.AniListID == id
 	})
 	if index < 0 {
 		return nil, false
 	}
 
-	return d.Entries[index], true
+	return &d.Entries[index], true
 }
 
 func (d *ArmDatabase) FindByMalID(id int) (*ArmEntry, bool) {
@@ -40,14 +40,14 @@ func (d *ArmDatabase) FindByMalID(id int) (*ArmEntry, bool) {
 		return nil, false
 	}
 
-	index := slices.IndexFunc(d.Entries, func(entry *ArmEntry) bool {
+	index := slices.IndexFunc(d.Entries, func(entry ArmEntry) bool {
 		return entry.MalID != 0 && entry.MalID == id
 	})
 	if index < 0 {
 		return nil, false
 	}
 
-	return d.Entries[index], true
+	return &d.Entries[index], true
 }
 
 func (d *ArmDatabase) FindBySyobocalTID(tid int) (*ArmEntry, bool) {
@@ -55,14 +55,14 @@ func (d *ArmDatabase) FindBySyobocalTID(tid int) (*ArmEntry, bool) {
 		return nil, false
 	}
 
-	index := slices.IndexFunc(d.Entries, func(entry *ArmEntry) bool {
+	index := slices.IndexFunc(d.Entries, func(entry ArmEntry) bool {
 		return entry.SyobocalTID != 0 && entry.SyobocalTID == tid
 	})
 	if index < 0 {
 		return nil, false
 	}
 
-	return d.Entries[index], true
+	return &d.Entries[index], true
 }
 
 func (d *ArmDatabase) FindForAniList(annictID int, malID string, syobocalID int) (*ArmEntry, bool) {

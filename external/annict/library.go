@@ -40,10 +40,17 @@ type Episode struct {
 	ViewerDidTrack bool `graphql:"viewerDidTrack"`
 }
 
+type StatusState string
+
 func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusState, after string) (*LibraryQuery, error) {
+	var statuses []StatusState
+	for _, s := range states {
+		statuses = append(statuses, StatusState(s))
+	}
+
 	var query LibraryQuery
 	variables := map[string]any{
-		"states": states,
+		"states": statuses,
 		"after":  after,
 	}
 	if err := c.client.Query(ctx, &query, variables); err != nil {
@@ -53,10 +60,10 @@ func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusS
 	return &query, nil
 }
 
-func (c *Client) FetchAllWorks(ctx context.Context) ([]*Work, error) {
+func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
 	var eg errgroup.Group
 	var mutex sync.Mutex
-	var works []*Work
+	var works []Work
 
 	// MEMO: Annict は複数の states を渡せるが、まとめて渡すよりも1つずつ送った方が速い
 	for _, s := range []status.AnnictStatusState{status.AnnictWatching, status.AnnictWatched, status.AnnictWannaWatch, status.AnnictOnHold, status.AnnictStopWatching} {
@@ -71,7 +78,7 @@ func (c *Client) FetchAllWorks(ctx context.Context) ([]*Work, error) {
 
 				mutex.Lock()
 				for _, node := range library.Viewer.LibraryEntries.Nodes {
-					works = append(works, &node.Work)
+					works = append(works, node.Work)
 				}
 				mutex.Unlock()
 
