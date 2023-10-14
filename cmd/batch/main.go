@@ -81,19 +81,7 @@ func doLoop(ctx context.Context, cfg *config.Config, annict *annict.Client, aniL
 	}
 	slog.Info("AniList user entries", slog.Int("len", len(aniListEntries)))
 
-	if err = ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg); err != nil {
-		return err
-	}
-
-	if cfg.IntervalMinutes == 0 {
-		return nil
-	}
-
-	duration := time.Duration(cfg.IntervalMinutes) * time.Minute
-	slog.Info("sleep", slog.String("duration", duration.String()))
-	time.Sleep(duration)
-
-	return doLoop(ctx, cfg, annict, aniList, aniListUserID)
+	return ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg)
 }
 
 type UntetheredEntry struct {
