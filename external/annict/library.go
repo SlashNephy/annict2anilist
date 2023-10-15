@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/cockroachdb/errors"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/SlashNephy/annict2anilist/domain/status"
@@ -40,7 +41,7 @@ type Episode struct {
 	ViewerDidTrack bool `graphql:"viewerDidTrack"`
 }
 
-type StatusState string
+type StatusState status.AnnictStatusState
 
 func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusState, after string) (*LibraryQuery, error) {
 	var statuses []StatusState
@@ -54,7 +55,7 @@ func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusS
 		"after":  after,
 	}
 	if err := c.client.Query(ctx, &query, variables); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &query, nil
@@ -73,7 +74,7 @@ func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
 			for {
 				library, err := c.FetchLibrary(ctx, []status.AnnictStatusState{s}, after)
 				if err != nil {
-					return err
+					return errors.WithStack(err)
 				}
 
 				mutex.Lock()
@@ -92,7 +93,7 @@ func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
 	}
 
 	if err := eg.Wait(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return works, nil

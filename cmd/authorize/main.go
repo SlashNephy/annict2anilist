@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cockroachdb/errors"
 	"github.com/goccy/go-json"
 	"github.com/labstack/gommon/random"
 	"golang.org/x/oauth2"
@@ -49,21 +50,25 @@ func authorize(ctx context.Context, config *oauth2.Config, path string) error {
 	// workaround: https://github.com/golang/go/issues/42551
 	in := bufio.NewReader(os.Stdin)
 	if _, err := fmt.Fscan(in, &code); err != nil {
-		panic(err)
+		return errors.WithStack(err)
 	}
 
 	// Code -> Token
 	token, err := config.Exchange(ctx, code)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// Token -> JSON
 	tokenJson, err := json.Marshal(token)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// Save Token JSON
-	return os.WriteFile(path, tokenJson, 0666)
+	if err = os.WriteFile(path, tokenJson, 0666); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }

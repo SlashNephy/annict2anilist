@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/goccy/go-json"
 
 	"github.com/SlashNephy/annict2anilist/config"
@@ -29,25 +30,25 @@ func FetchArmDatabase(ctx context.Context) (*ArmDatabase, error) {
 
 	request, err := http.NewRequestWithContext(ctx, "GET", "https://raw.githubusercontent.com/SlashNephy/arm-supplementary/master/dist/arm.json", nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	request.Header.Add("User-Agent", config.UserAgent)
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	var entries []ArmEntry
 	if err = json.Unmarshal(body, &entries); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &ArmDatabase{

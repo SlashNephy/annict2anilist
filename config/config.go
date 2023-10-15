@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/caarlos0/env/v9"
+	"github.com/cockroachdb/errors"
 	"github.com/joho/godotenv"
 )
 
@@ -26,13 +27,13 @@ func LoadConfig() (*Config, error) {
 	// .env がある場合だけ読み込む
 	if _, err := os.Stat(*envFile); !os.IsNotExist(err) {
 		if err = godotenv.Load(*envFile); err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 	}
 
 	var cfg Config
 	if err := env.Parse(&cfg); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &cfg, nil

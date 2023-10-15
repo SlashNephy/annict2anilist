@@ -3,6 +3,7 @@ package anilist
 import (
 	"context"
 
+	"github.com/cockroachdb/errors"
 	"github.com/hasura/go-graphql-client"
 	"golang.org/x/oauth2"
 
@@ -17,7 +18,7 @@ type Client struct {
 func NewClient(ctx context.Context, config *config.Config) (*Client, error) {
 	client, err := external.NewOAuth2Client(ctx, NewOAuth2Config(config), config, "token-anilist.json")
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &Client{

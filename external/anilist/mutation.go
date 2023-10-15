@@ -2,6 +2,9 @@ package anilist
 
 import (
 	"context"
+
+	"github.com/cockroachdb/errors"
+
 	"github.com/SlashNephy/annict2anilist/domain/status"
 )
 
@@ -19,7 +22,7 @@ func (c *Client) SaveMediaListEntry(ctx context.Context, mediaID int, status sta
 		"progress": progress,
 	}
 	if err := c.client.Mutate(ctx, &mutation, variables); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -37,7 +40,7 @@ func (c *Client) DeleteMediaListEntry(ctx context.Context, id int) error {
 		"id": id,
 	}
 	if err := c.client.Mutate(ctx, &mutation, variables); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil

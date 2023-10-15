@@ -2,10 +2,12 @@ package anilist
 
 import (
 	"context"
-	"github.com/SlashNephy/annict2anilist/domain/status"
 	"sync"
 
+	"github.com/cockroachdb/errors"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/SlashNephy/annict2anilist/domain/status"
 )
 
 type LibraryQuery struct {
@@ -40,7 +42,7 @@ type MediaListSort string
 
 const MediaListSortStartedOn MediaListSort = "STARTED_ON"
 
-type MediaListStatus string
+type MediaListStatus status.AniListMediaListStatus
 
 func (c *Client) FetchLibrary(ctx context.Context, userID, chunk int, status status.AniListMediaListStatus) (*LibraryQuery, error) {
 	var query LibraryQuery
@@ -52,7 +54,7 @@ func (c *Client) FetchLibrary(ctx context.Context, userID, chunk int, status sta
 		"status":   MediaListStatus(status),
 	}
 	if err := c.client.Query(ctx, &query, variables); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &query, nil
@@ -64,13 +66,13 @@ func (c *Client) FetchAllEntries(ctx context.Context, userID int) ([]LibraryEntr
 	var entries []LibraryEntry
 
 	for _, s := range []status.AniListMediaListStatus{status.AniListCurrent, status.AniListCompleted, status.AniListPlanning, status.AniListPaused, status.AniListDropped, status.AniListRepeating} {
-		status := s
+		s := s
 		eg.Go(func() error {
 			var chunk = 0
 			for {
-				library, err := c.FetchLibrary(ctx, userID, chunk, status)
+				library, err := c.FetchLibrary(ctx, userID, chunk, s)
 				if err != nil {
-					return err
+					return errors.WithStack(err)
 				}
 
 				mutex.Lock()
@@ -91,7 +93,7 @@ func (c *Client) FetchAllEntries(ctx context.Context, userID int) ([]LibraryEntr
 	}
 
 	if err := eg.Wait(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return entries, nil

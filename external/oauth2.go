@@ -2,11 +2,11 @@ package external
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
 
+	"github.com/cockroachdb/errors"
 	"github.com/goccy/go-json"
 	"golang.org/x/oauth2"
 
@@ -24,12 +24,12 @@ func NewOAuth2Client(ctx context.Context, oauth *oauth2.Config, config *config.C
 	// Load Token JSON
 	tokenJson, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// JSON -> Token
 	if err = json.Unmarshal(tokenJson, &token); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	source := oauth.TokenSource(ctx, token)
