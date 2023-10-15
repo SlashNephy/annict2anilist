@@ -5,13 +5,11 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"slices"
 
 	"github.com/goccy/go-json"
-	"github.com/samber/lo"
 
 	"github.com/SlashNephy/annict2anilist/config"
-	"github.com/SlashNephy/annict2anilist/domain/status"
+	"github.com/SlashNephy/annict2anilist/domain/diff"
 	"github.com/SlashNephy/annict2anilist/external/anilist"
 	"github.com/SlashNephy/annict2anilist/external/annict"
 	"github.com/SlashNephy/annict2anilist/external/arm"
@@ -54,18 +52,17 @@ func main() {
 		slog.Error("failed to fetch AniList viewer", slog.Any("err", err))
 		panic(err)
 	}
-	slog.Info("connected to AniList", slog.String("nickname", aniListViewer.Viewer.Name), slog.Int("user_id", aniListViewer.Viewer.ID))
+	slog.Info("connected to AniList",
+		slog.String("nickname", aniListViewer.Viewer.Name),
+		slog.Int("user_id", aniListViewer.Viewer.ID),
+	)
 
-	if cfg.DryRun {
-		slog.Info("running in dry run mode")
-	}
-
-	arm, err := arm.FetchArmDatabase(ctx)
+	armDatabase, err := arm.FetchArmDatabase(ctx)
 	if err != nil {
 		slog.Error("failed to fetch arm-supplementary database", slog.Any("err", err))
 		panic(err)
 	}
-	slog.Info("fetched arm-supplementary entries", slog.Int("length", len(arm.Entries)))
+	slog.Info("fetched arm-supplementary entries", slog.Int("length", len(armDatabase.Entries)))
 
 	annictWorks, err := annict.FetchAllWorks(ctx)
 	if err != nil {
@@ -81,13 +78,19 @@ func main() {
 	}
 	slog.Info("fetched AniList user entries", slog.Int("length", len(aniListEntries)))
 
-	untethered, err := ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg)
-	if err != nil {
-		slog.Error("failed to execute update", slog.Any("err", err))
-		panic(err)
+	diff := diff.CalculateDiff(annictWorks, aniListEntries, armDatabase)
+	if len(diff.AniListUpdates) > 0 {
+		if cfg.DryRun {
+			slog.Info("running in dry run mode")
+		} else {
+			if err = aniList.BatchSaveMediaListEntry(ctx, diff.AniListUpdates); err != nil {
+				slog.Error("failed to save AniList entry", slog.Any("err", err))
+				panic(err)
+			}
+		}
 	}
 
-	content, err := json.MarshalIndent(untethered, "", "  ")
+	content, err := json.MarshalIndent(diff.Untethered, "", "  ")
 	if err != nil {
 		slog.Error("failed to marshal untethered.json", slog.Any("err", err))
 		panic(err)
@@ -100,126 +103,4 @@ func main() {
 	}
 
 	return
-}
-
-type UntetheredEntry struct {
-	Source string `json:"source"`
-	ID     int    `json:"id"`
-	Title  string `json:"title"`
-}
-
-func ExecuteUpdate(ctx context.Context, works []annict.Work, entries []anilist.LibraryEntry, arm *arm.ArmDatabase, aniList *anilist.Client, cfg *config.Config) ([]UntetheredEntry, error) {
-	var untethered []UntetheredEntry
-	for _, w := range works {
-		a, found := arm.FindForAniList(w.AnnictID, w.MALAnimeID, w.SyobocalTID)
-		if !found || a.AniListID == 0 {
-			slog.Debug("arm does not have AniList relation", slog.Int("annict_id", w.AnnictID), slog.String("annict_title", w.Title))
-
-			untethered = append(untethered, UntetheredEntry{
-				Source: "Annict",
-				ID:     w.AnnictID,
-				Title:  w.Title,
-			})
-			continue
-		}
-
-		e, found := lo.Find(entries, func(x anilist.LibraryEntry) bool { return x.Media.ID == a.AniListID })
-
-		var annictProgress int
-		if w.NoEpisodes && w.ViewerStatusState == status.AnnictWatched {
-			// 劇場版などエピソード区分がないものは視聴済みの本数を 1 とする
-			annictProgress = 1
-		} else {
-			annictProgress = lo.CountBy(w.Episodes.Nodes, func(x annict.Episode) bool { return x.ViewerDidTrack })
-		}
-
-		if found {
-			// 差分が存在
-			if !status.IsSameListStatus(w.ViewerStatusState, e.Status) || e.Progress != annictProgress {
-				// 作品が終了していて、どちらのステータスも Completed になっている場合は Progress の更新を行わない
-				// AniList は Completed にした作品の Progress を自動的に更新する
-				if e.Media.Status == anilist.MediaStatusFinished && w.ViewerStatusState == status.AnnictWatched && e.Status == status.AniListCompleted {
-					slog.Debug("already completed",
-						slog.String("annict_title", w.Title),
-						slog.String("annict_state", string(w.ViewerStatusState)),
-						slog.Int("annict_progress", annictProgress),
-						slog.Int("annict_id", w.AnnictID),
-						slog.String("anilist_title", e.Media.Title.Native),
-						slog.String("anilist_state", string(e.Status)),
-						slog.Int("anilist_progress", e.Progress),
-						slog.Int("anilist_id", e.Media.ID),
-					)
-					continue
-				}
-
-				// Annict および AniList に含まれている
-				slog.Info(
-					"Annict -> AniList",
-					slog.String("media_status", string(e.Media.Status)),
-					slog.String("annict_title", w.Title),
-					slog.String("annict_state", string(w.ViewerStatusState)),
-					slog.Int("annict_progress", annictProgress),
-					slog.Int("annict_id", w.AnnictID),
-					slog.String("anilist_title", e.Media.Title.Native),
-					slog.String("anilist_state", string(e.Status)),
-					slog.Int("anilist_progress", e.Progress),
-					slog.Int("anilist_id", e.Media.ID),
-				)
-
-				// AniList のエントリーを更新する
-				if !cfg.DryRun {
-					if err := aniList.SaveMediaListEntry(ctx, e.Media.ID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
-						slog.Error("failed to save AniList entry", slog.Any("err", err))
-						continue
-					}
-				}
-			}
-		} else {
-			// Annict のみに含まれている
-			slog.Info(
-				"Annict -> nil",
-				slog.String("annict_title", w.Title),
-				slog.String("annict_state", string(w.ViewerStatusState)),
-				slog.Int("annict_progress", annictProgress),
-				slog.Int("annict_id", w.AnnictID),
-			)
-
-			// AniList にエントリーを作成する
-			if !cfg.DryRun {
-				if err := aniList.SaveMediaListEntry(ctx, a.AniListID, w.ViewerStatusState.ToAniListStatus(), annictProgress); err != nil {
-					slog.Error("failed to save AniList entry", slog.Any("err", err))
-					continue
-				}
-			}
-		}
-	}
-
-	for _, e := range entries {
-		a, found := arm.FindForAnnict(e.Media.ID, e.Media.IDMal)
-		if !found || a.AnnictID == 0 {
-			slog.Debug("arm does not have Annict relation", slog.Int("anilist_id", e.Media.ID), slog.String("anilist_title", e.Media.Title.Native))
-
-			untethered = append(untethered, UntetheredEntry{
-				Source: "AniList",
-				ID:     e.Media.ID,
-				Title:  e.Media.Title.Native,
-			})
-			continue
-		}
-
-		if !slices.ContainsFunc(works, func(x annict.Work) bool { return x.AnnictID == a.AnnictID }) {
-			// AniList のみに含まれている
-			slog.Info(
-				"nil -> AniList",
-				slog.String("anilist_title", e.Media.Title.Native),
-				slog.String("anilist_state", string(e.Status)),
-				slog.Int("anilist_progress", e.Progress),
-				slog.Int("anilist_id", e.Media.ID),
-			)
-
-			// ひとまず AniList 側から削除することはない
-		}
-	}
-
-	return untethered, nil
 }

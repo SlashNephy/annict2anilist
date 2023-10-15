@@ -24,16 +24,17 @@ type LibraryQuery struct {
 }
 
 type Work struct {
-	ID                string                   `graphql:"id"`
 	AnnictID          int                      `graphql:"annictId"`
 	MALAnimeID        string                   `graphql:"malAnimeId"`
 	SyobocalTID       int                      `graphql:"syobocalTid"`
 	Title             string                   `graphql:"title"`
-	NoEpisodes        bool                     `graphql:"noEpisodes"`
 	ViewerStatusState status.AnnictStatusState `graphql:"viewerStatusState"`
-	Episodes          struct {
-		Nodes []Episode `graphql:"nodes"`
-	} `graphql:"episodes"`
+	NoEpisodes        bool                     `graphql:"noEpisodes"`
+	Episodes          EpisodeConnection        `graphql:"episodes"`
+}
+
+type EpisodeConnection struct {
+	Nodes []Episode `graphql:"nodes"`
 }
 
 type Episode struct {

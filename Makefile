@@ -11,3 +11,6 @@ run-batch:
 
 run-authorize:
 	go run ./cmd/authorize
+
+test:
+	go test ./...

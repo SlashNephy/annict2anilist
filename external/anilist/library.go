@@ -23,15 +23,18 @@ type LibraryEntry struct {
 	ID       int                           `graphql:"id"`
 	Status   status.AniListMediaListStatus `graphql:"status"`
 	Progress int                           `graphql:"progress"`
-	Media    struct {
-		ID    int `graphql:"id"`
-		IDMal int `graphql:"idMal"`
-		Title struct {
-			Native string `graphql:"native"`
-		} `graphql:"title"`
-		Episodes int         `graphql:"episodes"`
-		Status   MediaStatus `graphql:"status"`
-	} `graphql:"media"`
+	Media    Media                         `graphql:"media"`
+}
+
+type Media struct {
+	ID     int         `graphql:"id"`
+	IDMal  int         `graphql:"idMal"`
+	Title  Title       `graphql:"title"`
+	Status MediaStatus `graphql:"status"`
+}
+
+type Title struct {
+	Native string `graphql:"native"`
 }
 
 type MediaStatus string
