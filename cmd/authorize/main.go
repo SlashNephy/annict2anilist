@@ -5,7 +5,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -17,6 +17,7 @@ import (
 	"github.com/SlashNephy/annict2anilist/config"
 	"github.com/SlashNephy/annict2anilist/external/anilist"
 	"github.com/SlashNephy/annict2anilist/external/annict"
+	_ "github.com/SlashNephy/annict2anilist/logger"
 )
 
 func main() {
@@ -25,24 +26,27 @@ func main() {
 	ctx := context.Background()
 	cfg, err := config.LoadConfig()
 	if err != nil {
+		slog.Error("failed to load config", slog.Any("err", err))
 		panic(err)
 	}
 
 	if err = authorize(ctx, anilist.NewOAuth2Config(cfg), filepath.Join(cfg.TokenDirectory, "token-anilist.json")); err != nil {
+		slog.Error("failed to authorize AniList client", slog.Any("err", err))
 		panic(err)
 	}
-	log.Printf("Authorized AniList client")
+	slog.Info("authorized AniList client")
 
 	if err = authorize(ctx, annict.NewOAuth2Config(cfg), filepath.Join(cfg.TokenDirectory, "token-annict.json")); err != nil {
+		slog.Error("failed to authorize Annict client", slog.Any("err", err))
 		panic(err)
 	}
-	log.Printf("Authorized Annict client")
+	slog.Info("authorized Annict client")
 }
 
 func authorize(ctx context.Context, config *oauth2.Config, path string) error {
 	state := random.String(64)
 	url := config.AuthCodeURL(state)
-	log.Printf("Open URL in browser, then paste code:\n=> %s\n", url)
+	slog.Info("open URL in browser, then paste code", slog.String("url", url))
 
 	// stdin -> Code
 	var code string

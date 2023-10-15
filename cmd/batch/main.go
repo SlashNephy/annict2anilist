@@ -21,66 +21,85 @@ import (
 func main() {
 	ctx := context.Background()
 
-	if err := do(ctx); err != nil {
-		panic(err)
-	}
-}
-
-func do(ctx context.Context) error {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		return err
+		slog.Error("failed to load config", slog.Any("err", err))
+		panic(err)
 	}
 
 	annict, err := annict.NewClient(ctx, cfg)
 	if err != nil {
-		return err
+		slog.Error("failed to create Annict client", slog.Any("err", err))
+		panic(err)
 	}
 
 	annictViewer, err := annict.FetchViewer(ctx)
 	if err != nil {
-		return err
+		slog.Error("failed to fetch Annict viewer", slog.Any("err", err))
+		panic(err)
 	}
-	slog.Info("Annict user", slog.String("name", annictViewer.Viewer.Name), slog.String("username", annictViewer.Viewer.Username))
+	slog.Info("connected to Annict",
+		slog.String("username", annictViewer.Viewer.Username),
+		slog.String("nickname", annictViewer.Viewer.Name),
+	)
 
 	aniList, err := anilist.NewClient(ctx, cfg)
 	if err != nil {
-		return err
+		slog.Error("failed to create AniList client", slog.Any("err", err))
+		panic(err)
 	}
 
 	aniListViewer, err := aniList.FetchViewer(ctx)
 	if err != nil {
-		return err
+		slog.Error("failed to fetch AniList viewer", slog.Any("err", err))
+		panic(err)
 	}
-	slog.Info("AniList user", slog.String("name", aniListViewer.Viewer.Name), slog.Int("id", aniListViewer.Viewer.ID))
+	slog.Info("connected to AniList", slog.String("nickname", aniListViewer.Viewer.Name), slog.Int("user_id", aniListViewer.Viewer.ID))
 
 	if cfg.DryRun {
 		slog.Info("running in dry run mode")
 	}
 
-	return doLoop(ctx, cfg, annict, aniList, aniListViewer.Viewer.ID)
-}
-
-func doLoop(ctx context.Context, cfg *config.Config, annict *annict.Client, aniList *anilist.Client, aniListUserID int) error {
 	arm, err := arm.FetchArmDatabase(ctx)
 	if err != nil {
-		return err
+		slog.Error("failed to fetch arm-supplementary database", slog.Any("err", err))
+		panic(err)
 	}
-	slog.Info("arm-supplementary entries", slog.Int("len", len(arm.Entries)))
+	slog.Info("fetched arm-supplementary entries", slog.Int("length", len(arm.Entries)))
 
 	annictWorks, err := annict.FetchAllWorks(ctx)
 	if err != nil {
-		return err
+		slog.Error("failed to fetch Annict works", slog.Any("err", err))
+		panic(err)
 	}
-	slog.Info("Annict user works", slog.Int("len", len(annictWorks)))
+	slog.Info("fetched Annict user works", slog.Int("length", len(annictWorks)))
 
-	aniListEntries, err := aniList.FetchAllEntries(ctx, aniListUserID)
+	aniListEntries, err := aniList.FetchAllEntries(ctx, aniListViewer.Viewer.ID)
 	if err != nil {
-		return err
+		slog.Error("failed to fetch AniList entries", slog.Any("err", err))
+		panic(err)
 	}
-	slog.Info("AniList user entries", slog.Int("len", len(aniListEntries)))
+	slog.Info("fetched AniList user entries", slog.Int("length", len(aniListEntries)))
 
-	return ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg)
+	untethered, err := ExecuteUpdate(ctx, annictWorks, aniListEntries, arm, aniList, cfg)
+	if err != nil {
+		slog.Error("failed to execute update", slog.Any("err", err))
+		panic(err)
+	}
+
+	content, err := json.MarshalIndent(untethered, "", "  ")
+	if err != nil {
+		slog.Error("failed to marshal untethered.json", slog.Any("err", err))
+		panic(err)
+	}
+
+	path := filepath.Join(cfg.TokenDirectory, "untethered.json")
+	if err = os.WriteFile(path, content, 0600); err != nil {
+		slog.Error("failed to write untethered.json", slog.Any("err", err))
+		panic(err)
+	}
+
+	return
 }
 
 type UntetheredEntry struct {
@@ -89,7 +108,7 @@ type UntetheredEntry struct {
 	Title  string `json:"title"`
 }
 
-func ExecuteUpdate(ctx context.Context, works []annict.Work, entries []anilist.LibraryEntry, arm *arm.ArmDatabase, aniList *anilist.Client, cfg *config.Config) error {
+func ExecuteUpdate(ctx context.Context, works []annict.Work, entries []anilist.LibraryEntry, arm *arm.ArmDatabase, aniList *anilist.Client, cfg *config.Config) ([]UntetheredEntry, error) {
 	var untethered []UntetheredEntry
 	for _, w := range works {
 		a, found := arm.FindForAniList(w.AnnictID, w.MALAnimeID, w.SyobocalTID)
@@ -202,11 +221,5 @@ func ExecuteUpdate(ctx context.Context, works []annict.Work, entries []anilist.L
 		}
 	}
 
-	content, err := json.MarshalIndent(untethered, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	path := filepath.Join(cfg.TokenDirectory, "untethered.json")
-	return os.WriteFile(path, content, 0666)
+	return untethered, nil
 }
