@@ -62,7 +62,7 @@ func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusS
 }
 
 func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
-	var eg errgroup.Group
+	eg, egctx := errgroup.WithContext(ctx)
 	var mutex sync.Mutex
 	var works []Work
 
@@ -72,7 +72,7 @@ func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
 		eg.Go(func() error {
 			var after string
 			for {
-				library, err := c.FetchLibrary(ctx, []status.AnnictStatusState{s}, after)
+				library, err := c.FetchLibrary(egctx, []status.AnnictStatusState{s}, after)
 				if err != nil {
 					return errors.WithStack(err)
 				}

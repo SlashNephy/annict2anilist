@@ -61,7 +61,7 @@ func (c *Client) FetchLibrary(ctx context.Context, userID, chunk int, status sta
 }
 
 func (c *Client) FetchAllEntries(ctx context.Context, userID int) ([]LibraryEntry, error) {
-	var eg errgroup.Group
+	eg, egctx := errgroup.WithContext(ctx)
 	var mutex sync.Mutex
 	var entries []LibraryEntry
 
@@ -70,7 +70,7 @@ func (c *Client) FetchAllEntries(ctx context.Context, userID int) ([]LibraryEntr
 		eg.Go(func() error {
 			var chunk = 0
 			for {
-				library, err := c.FetchLibrary(ctx, userID, chunk, s)
+				library, err := c.FetchLibrary(egctx, userID, chunk, s)
 				if err != nil {
 					return errors.WithStack(err)
 				}
