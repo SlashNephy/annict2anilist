@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/SlashNephy/annict2anilist/domain/status"
 )
@@ -14,14 +15,41 @@ type SaveMediaListEntryMutation struct {
 	} `graphql:"SaveMediaListEntry(mediaId: $mediaID, status: $status, progress: $progress)"`
 }
 
-func (c *Client) SaveMediaListEntry(ctx context.Context, mediaID int, status status.AniListMediaListStatus, progress int) error {
+type MediaListEntryUpdate struct {
+	MediaID  int
+	Status   status.AniListMediaListStatus
+	Progress int
+}
+
+func (c *Client) SaveMediaListEntry(ctx context.Context, update *MediaListEntryUpdate) error {
 	var mutation SaveMediaListEntryMutation
 	variables := map[string]any{
-		"mediaID":  mediaID,
-		"status":   MediaListStatus(status),
-		"progress": progress,
+		"mediaID":  update.MediaID,
+		"status":   MediaListStatus(update.Status),
+		"progress": update.Progress,
 	}
 	if err := c.client.Mutate(ctx, &mutation, variables); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (c *Client) BatchSaveMediaListEntry(ctx context.Context, updates []*MediaListEntryUpdate) error {
+	eg, egctx := errgroup.WithContext(ctx)
+
+	for _, u := range updates {
+		u := u
+		eg.Go(func() error {
+			if err := c.SaveMediaListEntry(egctx, u); err != nil {
+				return errors.WithStack(err)
+			}
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
 		return errors.WithStack(err)
 	}
 
