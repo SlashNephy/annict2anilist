@@ -2,10 +2,9 @@ package annict
 
 import (
 	"context"
-	"sync"
+	"time"
 
 	"github.com/cockroachdb/errors"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/SlashNephy/annict2anilist/domain/status"
 )
@@ -62,38 +61,30 @@ func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusS
 }
 
 func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
-	eg, egctx := errgroup.WithContext(ctx)
-	var mutex sync.Mutex
 	var works []Work
+	var after string
+	for {
+		library, err := c.FetchLibrary(ctx, []status.AnnictStatusState{
+			status.AnnictWatching,
+			status.AnnictWatched,
+			status.AnnictWannaWatch,
+			status.AnnictOnHold,
+			status.AnnictStopWatching,
+		}, after)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
 
-	// MEMO: Annict は複数の states を渡せるが、まとめて渡すよりも1つずつ送った方が速い
-	for _, s := range []status.AnnictStatusState{status.AnnictWatching, status.AnnictWatched, status.AnnictWannaWatch, status.AnnictOnHold, status.AnnictStopWatching} {
-		s := s
-		eg.Go(func() error {
-			var after string
-			for {
-				library, err := c.FetchLibrary(egctx, []status.AnnictStatusState{s}, after)
-				if err != nil {
-					return errors.WithStack(err)
-				}
+		for _, node := range library.Viewer.LibraryEntries.Nodes {
+			works = append(works, node.Work)
+		}
 
-				mutex.Lock()
-				for _, node := range library.Viewer.LibraryEntries.Nodes {
-					works = append(works, node.Work)
-				}
-				mutex.Unlock()
+		if !library.Viewer.LibraryEntries.PageInfo.HasNextPage {
+			break
+		}
 
-				if !library.Viewer.LibraryEntries.PageInfo.HasNextPage {
-					return nil
-				}
-
-				after = library.Viewer.LibraryEntries.PageInfo.EndCursor
-			}
-		})
-	}
-
-	if err := eg.Wait(); err != nil {
-		return nil, errors.WithStack(err)
+		after = library.Viewer.LibraryEntries.PageInfo.EndCursor
+		time.Sleep(3 * time.Second)
 	}
 
 	return works, nil
