@@ -16,7 +16,6 @@ type Config struct {
 	AniListClientID     string `env:"ANILIST_CLIENT_ID,required"`
 	AniListClientSecret string `env:"ANILIST_CLIENT_SECRET,required"`
 	TokenDirectory      string `env:"TOKEN_DIRECTORY" envDefault:"."`
-	IntervalMinutes     int64  `env:"INTERVAL_MINUTES"`
 	DryRun              bool   `env:"DRY_RUN"`
 }
 
