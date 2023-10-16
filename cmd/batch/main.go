@@ -10,6 +10,7 @@ import (
 
 	"github.com/SlashNephy/annict2anilist/config"
 	"github.com/SlashNephy/annict2anilist/domain/diff"
+	"github.com/SlashNephy/annict2anilist/external"
 	"github.com/SlashNephy/annict2anilist/external/anilist"
 	"github.com/SlashNephy/annict2anilist/external/annict"
 	"github.com/SlashNephy/annict2anilist/external/arm"
@@ -26,12 +27,8 @@ func main() {
 	}
 	logger.SetLevel(cfg.LogLevel)
 
-	if err = logger.SetLevel(cfg.LogLevel); err != nil {
-		slog.Error("failed to set log level", slog.Any("err", err))
-		panic(err)
-	}
-
-	annict, err := annict.NewClient(ctx, cfg)
+	httpClient := external.NewHttpClient()
+	annict, err := annict.NewClient(ctx, httpClient, cfg)
 	if err != nil {
 		slog.Error("failed to create Annict client", slog.Any("err", err))
 		panic(err)
@@ -47,7 +44,7 @@ func main() {
 		slog.String("nickname", annictViewer.Viewer.Name),
 	)
 
-	aniList, err := anilist.NewClient(ctx, cfg)
+	aniList, err := anilist.NewClient(ctx, httpClient, cfg)
 	if err != nil {
 		slog.Error("failed to create AniList client", slog.Any("err", err))
 		panic(err)
@@ -63,7 +60,7 @@ func main() {
 		slog.Int("user_id", aniListViewer.Viewer.ID),
 	)
 
-	armDatabase, err := arm.FetchArmDatabase(ctx)
+	armDatabase, err := arm.FetchArmDatabase(ctx, httpClient)
 	if err != nil {
 		slog.Error("failed to fetch arm-supplementary database", slog.Any("err", err))
 		panic(err)
@@ -85,7 +82,11 @@ func main() {
 	slog.Info("fetched AniList user entries", slog.Int("length", len(aniListEntries)))
 
 	diff := diff.CalculateDiff(annictWorks, aniListEntries, armDatabase)
-	if len(diff.AniListUpdates) > 0 {
+	if len(diff.AniListUpdates) == 0 {
+		slog.Info("there are no updates to save")
+	} else {
+		slog.Info("there are updates to save", slog.Int("length", len(diff.AniListUpdates)))
+
 		if cfg.DryRun {
 			slog.Info("running in dry run mode")
 		} else {
@@ -107,6 +108,8 @@ func main() {
 		slog.Error("failed to write untethered.json", slog.Any("err", err))
 		panic(err)
 	}
+
+	slog.Info("batch done")
 
 	return
 }

@@ -2,6 +2,7 @@ package anilist
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hasura/go-graphql-client"
@@ -15,7 +16,8 @@ type Client struct {
 	client *graphql.Client
 }
 
-func NewClient(ctx context.Context, config *config.Config) (*Client, error) {
+func NewClient(ctx context.Context, httpClient *http.Client, config *config.Config) (*Client, error) {
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	client, err := external.NewOAuth2Client(ctx, NewOAuth2Config(config), config, "token-anilist.json")
 	if err != nil {
 		return nil, errors.WithStack(err)

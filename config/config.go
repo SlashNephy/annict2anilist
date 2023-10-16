@@ -9,8 +9,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const UserAgent = "annict2anilist/1.0 (+https://github.com/SlashNephy/annict2anilist)"
-
 type Config struct {
 	AnnictClientID      string `env:"ANNICT_CLIENT_ID,required"`
 	AnnictClientSecret  string `env:"ANNICT_CLIENT_SECRET,required"`

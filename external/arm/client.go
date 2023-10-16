@@ -2,14 +2,10 @@ package arm
 
 import (
 	"context"
-	"io"
-	"net/http"
-	"time"
-
 	"github.com/cockroachdb/errors"
 	"github.com/goccy/go-json"
-
-	"github.com/SlashNephy/annict2anilist/config"
+	"io"
+	"net/http"
 )
 
 type ArmDatabase struct {
@@ -23,17 +19,12 @@ type ArmEntry struct {
 	SyobocalTID int `json:"syobocal_tid"`
 }
 
-func FetchArmDatabase(ctx context.Context) (*ArmDatabase, error) {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
+func FetchArmDatabase(ctx context.Context, client *http.Client) (*ArmDatabase, error) {
 	request, err := http.NewRequestWithContext(ctx, "GET", "https://raw.githubusercontent.com/SlashNephy/arm-supplementary/master/dist/arm.json", nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	request.Header.Add("User-Agent", config.UserAgent)
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, errors.WithStack(err)
