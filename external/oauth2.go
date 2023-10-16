@@ -2,6 +2,7 @@ package external
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,7 +17,6 @@ import (
 func NewOAuth2Client(ctx context.Context, oauth *oauth2.Config, config *config.Config, tokenFile string) (*http.Client, error) {
 	path := filepath.Join(config.TokenDirectory, tokenFile)
 
-	var token *oauth2.Token
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		return nil, errors.New("token file not found: you need to run cmd/authorize first")
 	}
@@ -28,10 +28,40 @@ func NewOAuth2Client(ctx context.Context, oauth *oauth2.Config, config *config.C
 	}
 
 	// JSON -> Token
+	var token *oauth2.Token
 	if err = json.Unmarshal(tokenJson, &token); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	source := oauth.TokenSource(ctx, token)
+	if !token.Valid() {
+		slog.Info("refreshing token",
+			slog.String("token_type", token.TokenType),
+			slog.String("token_file", tokenFile),
+		)
+
+		token, err = source.Token()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		// Token -> JSON
+		tokenJson, err = json.Marshal(token)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		// Save Token JSON
+		if err = os.WriteFile(path, tokenJson, 0666); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	slog.Info("active token",
+		slog.String("expiry", token.Expiry.String()),
+		slog.String("token_type", token.TokenType),
+		slog.String("token_file", tokenFile),
+	)
+
 	return oauth2.NewClient(ctx, source), nil
 }
