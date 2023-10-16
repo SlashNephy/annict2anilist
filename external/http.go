@@ -9,7 +9,7 @@ import (
 func NewHttpClient() *http.Client {
 	return &http.Client{
 		Transport: &loggingTransport{},
-		Timeout:   30 * time.Second,
+		Timeout:   time.Minute,
 	}
 }
 
