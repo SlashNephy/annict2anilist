@@ -17,7 +17,7 @@ import (
 	"github.com/SlashNephy/annict2anilist/config"
 	"github.com/SlashNephy/annict2anilist/external/anilist"
 	"github.com/SlashNephy/annict2anilist/external/annict"
-	_ "github.com/SlashNephy/annict2anilist/logger"
+	"github.com/SlashNephy/annict2anilist/logger"
 )
 
 func main() {
@@ -29,6 +29,7 @@ func main() {
 		slog.Error("failed to load config", slog.Any("err", err))
 		panic(err)
 	}
+	logger.SetLevel(cfg.LogLevel)
 
 	if err = authorize(ctx, anilist.NewOAuth2Config(cfg), filepath.Join(cfg.TokenDirectory, "token-anilist.json")); err != nil {
 		slog.Error("failed to authorize AniList client", slog.Any("err", err))

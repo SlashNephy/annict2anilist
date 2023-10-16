@@ -13,7 +13,7 @@ import (
 	"github.com/SlashNephy/annict2anilist/external/anilist"
 	"github.com/SlashNephy/annict2anilist/external/annict"
 	"github.com/SlashNephy/annict2anilist/external/arm"
-	_ "github.com/SlashNephy/annict2anilist/logger"
+	"github.com/SlashNephy/annict2anilist/logger"
 )
 
 func main() {
@@ -22,6 +22,12 @@ func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		slog.Error("failed to load config", slog.Any("err", err))
+		panic(err)
+	}
+	logger.SetLevel(cfg.LogLevel)
+
+	if err = logger.SetLevel(cfg.LogLevel); err != nil {
+		slog.Error("failed to set log level", slog.Any("err", err))
 		panic(err)
 	}
 
