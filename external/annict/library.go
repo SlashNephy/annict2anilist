@@ -12,9 +12,11 @@ import (
 type LibraryQuery struct {
 	Viewer struct {
 		LibraryEntries struct {
-			Nodes []struct {
-				Work Work `graphql:"work"`
-			} `graphql:"nodes"`
+			Edges []struct {
+				Node struct {
+					Work Work `graphql:"work"`
+				} `graphql:"node"`
+			} `graphql:"edges"`
 			PageInfo struct {
 				HasNextPage bool   `graphql:"hasNextPage"`
 				EndCursor   string `graphql:"endCursor"`
@@ -76,8 +78,8 @@ func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
 			return nil, errors.WithStack(err)
 		}
 
-		for _, node := range library.Viewer.LibraryEntries.Nodes {
-			works = append(works, node.Work)
+		for _, node := range library.Viewer.LibraryEntries.Edges {
+			works = append(works, node.Node.Work)
 		}
 
 		if !library.Viewer.LibraryEntries.PageInfo.HasNextPage {
