@@ -2,6 +2,7 @@ package annict
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -11,7 +12,7 @@ import (
 
 type LibraryQuery struct {
 	Viewer struct {
-		LibraryEntries LibraryEntryConnection `graphql:"libraryEntries(states: $states, after: $after)"`
+		LibraryEntries LibraryEntryConnection `graphql:"libraryEntries(after: $after, first: $first, states: $states)"`
 	} `graphql:"viewer"`
 }
 
@@ -57,7 +58,7 @@ type Episode struct {
 
 type StatusState status.AnnictStatusState
 
-func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusState, after string) (*LibraryQuery, error) {
+func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusState, after string, first int) (*LibraryQuery, error) {
 	var statuses []StatusState
 	for _, s := range states {
 		statuses = append(statuses, StatusState(s))
@@ -65,8 +66,9 @@ func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusS
 
 	var query LibraryQuery
 	variables := map[string]any{
-		"states": statuses,
 		"after":  after,
+		"first":  first,
+		"states": statuses,
 	}
 	if err := c.client.Query(ctx, &query, variables); err != nil {
 		return nil, errors.WithStack(err)
@@ -76,8 +78,10 @@ func (c *Client) FetchLibrary(ctx context.Context, states []status.AnnictStatusS
 }
 
 func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
-	var works []Work
-	var after string
+	var (
+		works []Work
+		after string
+	)
 	for {
 		library, err := c.FetchLibrary(ctx, []status.AnnictStatusState{
 			status.AnnictWatching,
@@ -85,22 +89,21 @@ func (c *Client) FetchAllWorks(ctx context.Context) ([]Work, error) {
 			status.AnnictWannaWatch,
 			status.AnnictOnHold,
 			status.AnnictStopWatching,
-		}, after)
+		}, after, 100)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 
-		for _, node := range library.Viewer.LibraryEntries.Edges {
-			works = append(works, node.Node.Work)
+		for _, edge := range library.Viewer.LibraryEntries.Edges {
+			works = append(works, edge.Node.Work)
 		}
+		slog.Info("fetch works", slog.Int("total", len(works)))
 
 		if !library.Viewer.LibraryEntries.PageInfo.HasNextPage {
-			break
+			return works, nil
 		}
 
 		after = library.Viewer.LibraryEntries.PageInfo.EndCursor
-		time.Sleep(3 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
-
-	return works, nil
 }
