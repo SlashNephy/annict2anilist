@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/goccy/go-json"
@@ -63,5 +64,7 @@ func NewOAuth2Client(ctx context.Context, oauth *oauth2.Config, config *config.C
 		slog.String("token_file", tokenFile),
 	)
 
-	return oauth2.NewClient(ctx, source), nil
+	client := oauth2.NewClient(ctx, source)
+	client.Timeout = 15 * time.Second
+	return client, nil
 }
