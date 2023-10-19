@@ -36,7 +36,11 @@ type Work struct {
 }
 
 type EpisodeConnection struct {
-	Nodes []Episode `graphql:"nodes"`
+	Edges []EpisodeEdge `graphql:"edges"`
+}
+
+type EpisodeEdge struct {
+	Node Episode `graphql:"node"`
 }
 
 type Episode struct {

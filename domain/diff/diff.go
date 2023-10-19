@@ -157,7 +157,7 @@ func detectAnnictProgress(work annict.Work) int {
 	}
 
 	// 記録済みのエピソード数を数える
-	return lo.CountBy(work.Episodes.Nodes, func(episode annict.Episode) bool {
-		return episode.ViewerDidTrack
+	return lo.CountBy(work.Episodes.Edges, func(edge annict.EpisodeEdge) bool {
+		return edge.Node.ViewerDidTrack
 	})
 }

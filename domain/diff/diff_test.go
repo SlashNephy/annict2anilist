@@ -17,15 +17,17 @@ const (
 )
 
 func createEpisodeConnection(numWatched int) annict.EpisodeConnection {
-	var nodes []annict.Episode
+	var edges []annict.EpisodeEdge
 	for i := 0; i < numWatched; i++ {
-		nodes = append(nodes, annict.Episode{
-			ViewerDidTrack: true,
+		edges = append(edges, annict.EpisodeEdge{
+			Node: annict.Episode{
+				ViewerDidTrack: true,
+			},
 		})
 	}
 
 	return annict.EpisodeConnection{
-		Nodes: nodes,
+		Edges: edges,
 	}
 }
 
