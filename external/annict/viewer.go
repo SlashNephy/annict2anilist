@@ -7,10 +7,12 @@ import (
 )
 
 type ViewerQuery struct {
-	Viewer struct {
-		Name     string `graphql:"name"`
-		Username string `graphql:"username"`
-	} `graphql:"viewer"`
+	Viewer User `graphql:"viewer"`
+}
+
+type User struct {
+	Name     string `graphql:"name"`
+	Username string `graphql:"username"`
 }
 
 func (c *Client) FetchViewer(ctx context.Context) (*ViewerQuery, error) {

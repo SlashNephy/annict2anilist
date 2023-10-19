@@ -11,18 +11,26 @@ import (
 
 type LibraryQuery struct {
 	Viewer struct {
-		LibraryEntries struct {
-			Edges []struct {
-				Node struct {
-					Work Work `graphql:"work"`
-				} `graphql:"node"`
-			} `graphql:"edges"`
-			PageInfo struct {
-				HasNextPage bool   `graphql:"hasNextPage"`
-				EndCursor   string `graphql:"endCursor"`
-			} `graphql:"pageInfo"`
-		} `graphql:"libraryEntries(states: $states, after: $after)"`
+		LibraryEntries LibraryEntryConnection `graphql:"libraryEntries(states: $states, after: $after)"`
 	} `graphql:"viewer"`
+}
+
+type LibraryEntryConnection struct {
+	Edges    []LibraryEntryEdge `graphql:"edges"`
+	PageInfo PageInfo           `graphql:"pageInfo"`
+}
+
+type LibraryEntryEdge struct {
+	Node LibraryEntry `graphql:"node"`
+}
+
+type PageInfo struct {
+	HasNextPage bool   `graphql:"hasNextPage"`
+	EndCursor   string `graphql:"endCursor"`
+}
+
+type LibraryEntry struct {
+	Work Work `graphql:"work"`
 }
 
 type Work struct {
