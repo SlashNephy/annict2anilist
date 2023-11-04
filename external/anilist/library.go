@@ -80,9 +80,7 @@ func (c *Client) FetchAllEntries(ctx context.Context, userID int) ([]LibraryEntr
 
 				mutex.Lock()
 				for _, list := range library.MediaListCollection.Lists {
-					for _, e := range list.Entries {
-						entries = append(entries, e)
-					}
+					entries = append(entries, list.Entries...)
 				}
 				mutex.Unlock()
 

@@ -110,6 +110,4 @@ func main() {
 	}
 
 	slog.Info("batch done")
-
-	return
 }
