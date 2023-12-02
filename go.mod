@@ -9,7 +9,7 @@ require (
 	github.com/hasura/go-graphql-client v0.10.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/gommon v0.4.0
-	github.com/samber/lo v1.38.1
+	github.com/samber/lo v1.39.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/oauth2 v0.13.0
 	golang.org/x/sync v0.5.0
