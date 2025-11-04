@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/cockroachdb/errors v1.11.1
-	github.com/goccy/go-json v0.10.2
+	github.com/goccy/go-json v0.10.5
 	github.com/hasura/go-graphql-client v0.10.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/gommon v0.4.0
