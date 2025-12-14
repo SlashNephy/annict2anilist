@@ -2,10 +2,11 @@ package arm
 
 import (
 	"context"
-	"github.com/cockroachdb/errors"
-	"github.com/goccy/go-json"
 	"io"
 	"net/http"
+
+	"github.com/cockroachdb/errors"
+	"github.com/goccy/go-json"
 )
 
 type ArmDatabase struct {
@@ -30,7 +31,9 @@ func FetchArmDatabase(ctx context.Context, client *http.Client) (*ArmDatabase, e
 		return nil, errors.WithStack(err)
 	}
 
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
