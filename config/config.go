@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/caarlos0/env/v10"
+	"github.com/caarlos0/env/v11"
 	"github.com/cockroachdb/errors"
 	"github.com/joho/godotenv"
 )
