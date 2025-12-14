@@ -44,15 +44,13 @@ $ make run-authorize
 $ make run-batch
 ```
 
-## Run (docker-compose.yml)
+## Run (compose.yaml)
 
-以下のような `docker-compose.yml` を用意すると、コンテナとして動作可能になります。
+以下のような `compose.yaml` を用意すると、コンテナとして動作可能になります。
 
 一度 CLI で実行して認可を取得後、`./token` にトークン JSON を配置しておいてください。
 
 ```yml
-version: '3.8'
-
 services:
   app:
     container_name: annict2anilist
