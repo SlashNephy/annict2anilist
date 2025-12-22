@@ -38,7 +38,6 @@ func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error
 		if err != nil {
 			return nil, err
 		}
-		request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 
 	retryCount := 0
@@ -83,8 +82,16 @@ func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error
 				return response, nil
 			}
 
-			// Validate retry-after value to prevent excessive waiting
-			if retryAfter > maxRetryAfterSec {
+			// Validate retry-after value to prevent excessive waiting or invalid values
+			if retryAfter < 0 {
+				slog.Warn("retry-after is negative, returning error",
+					slog.String("url", request.URL.String()),
+					slog.Int("retry_after_seconds", retryAfter),
+				)
+				return response, nil
+			}
+
+			if retryAfter >= maxRetryAfterSec {
 				slog.Warn("retry-after exceeds maximum, returning error",
 					slog.String("url", request.URL.String()),
 					slog.Int("retry_after_seconds", retryAfter),
