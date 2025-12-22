@@ -80,8 +80,8 @@ fabric.properties
 *.dylib
 
 # Build artifacts
-authorize
-batch
+/authorize
+/batch
 
 # Test binary, built with `go test -c`
 *.test
