@@ -24,8 +24,8 @@ type retryTransport struct {
 }
 
 const (
-	maxRetries       = 5
-	maxRetryAfterSec = 300 // 5 minutes
+	maxRetries       = 10
+	maxRetryAfterSec = 3600 // 1 hour
 )
 
 func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error) {
