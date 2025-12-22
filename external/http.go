@@ -1,15 +1,88 @@
 package external
 
 import (
+	"bytes"
+	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 func NewHttpClient() *http.Client {
 	return &http.Client{
-		Transport: &loggingTransport{},
-		Timeout:   15 * time.Second,
+		Transport: &retryTransport{
+			base: &loggingTransport{},
+		},
+		Timeout: 15 * time.Second,
+	}
+}
+
+// retryTransport handles 429 rate limit errors with Retry-After header
+type retryTransport struct {
+	base http.RoundTripper
+}
+
+func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+	// Read and store the request body so we can retry if needed
+	var bodyBytes []byte
+	if request.Body != nil {
+		var err error
+		bodyBytes, err = io.ReadAll(request.Body)
+		if err != nil {
+			return nil, err
+		}
+		request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	}
+
+	for {
+		// Restore the request body for retry attempts
+		if bodyBytes != nil {
+			request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		}
+
+		response, err := t.base.RoundTrip(request)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check if we got a 429 rate limit error
+		if response.StatusCode == http.StatusTooManyRequests {
+			// Get the Retry-After header
+			retryAfterStr := response.Header.Get("Retry-After")
+			if retryAfterStr == "" {
+				// No Retry-After header, return the error response
+				return response, nil
+			}
+
+			// Parse Retry-After header (in seconds)
+			retryAfter, err := strconv.Atoi(retryAfterStr)
+			if err != nil {
+				// If parsing fails, return the error response
+				slog.Warn("failed to parse Retry-After header",
+					slog.String("value", retryAfterStr),
+					slog.String("error", err.Error()),
+				)
+				return response, nil
+			}
+
+			// Close the response body before retrying
+			response.Body.Close()
+
+			// Wait for the specified time
+			waitDuration := time.Duration(retryAfter) * time.Second
+			slog.Info("rate limited, retrying after delay",
+				slog.String("url", request.URL.String()),
+				slog.Int("retry_after_seconds", retryAfter),
+			)
+			time.Sleep(waitDuration)
+
+			// Retry the request
+			continue
+		}
+
+		// Not a 429 error, return the response
+		return response, nil
 	}
 }
 
