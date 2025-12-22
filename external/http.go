@@ -11,8 +11,10 @@ import (
 
 func NewHttpClient() *http.Client {
 	return &http.Client{
-		Transport: &retryTransport{
-			base: &loggingTransport{},
+		Transport: &loggingTransport{
+			base: &retryTransport{
+				base: http.DefaultTransport,
+			},
 		},
 		Timeout: 15 * time.Second,
 	}
@@ -116,11 +118,13 @@ func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error
 
 var _ http.RoundTripper = (*retryTransport)(nil)
 
-type loggingTransport struct{}
+type loggingTransport struct {
+	base http.RoundTripper
+}
 
 const userAgent = "annict2anilist/1.0 (+https://github.com/SlashNephy/annict2anilist)"
 
-func (*loggingTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+func (t *loggingTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	slog.Debug("http request",
 		slog.String("method", request.Method),
 		slog.String("url", request.URL.String()),
@@ -129,7 +133,7 @@ func (*loggingTransport) RoundTrip(request *http.Request) (*http.Response, error
 	request.Header.Set("User-Agent", userAgent)
 
 	t1 := time.Now()
-	response, err := http.DefaultTransport.RoundTrip(request)
+	response, err := t.base.RoundTrip(request)
 	if err != nil {
 		return nil, err
 	}
