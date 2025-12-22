@@ -79,6 +79,10 @@ fabric.properties
 *.so
 *.dylib
 
+# Build artifacts
+authorize
+batch
+
 # Test binary, built with `go test -c`
 *.test
 
