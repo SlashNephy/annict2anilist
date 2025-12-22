@@ -235,3 +235,65 @@ func TestRetryTransport_MultipleRetries(t *testing.T) {
 	assert.Equal(t, "Success", string(body))
 	resp.Body.Close()
 }
+
+func TestRetryTransport_MaxRetriesExceeded(t *testing.T) {
+	requestCount := 0
+
+	// Create a test server that always returns 429
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		w.Header().Set("Retry-After", "1")
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	// Create a retry transport
+	transport := &retryTransport{
+		base: http.DefaultTransport,
+	}
+
+	client := &http.Client{
+		Transport: transport,
+	}
+
+	// Make a request
+	resp, err := client.Get(server.URL)
+
+	// Assertions
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusTooManyRequests, resp.StatusCode, "Should return 429 after max retries")
+	// Should have tried initial request + maxRetries
+	assert.Equal(t, maxRetries+1, requestCount, "Expected %d requests (1 initial + %d retries)", maxRetries+1, maxRetries)
+	resp.Body.Close()
+}
+
+func TestRetryTransport_ExcessiveRetryAfter(t *testing.T) {
+	requestCount := 0
+
+	// Create a test server that returns 429 with excessive Retry-After
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		// Set Retry-After to more than maxRetryAfterSec
+		w.Header().Set("Retry-After", "3600") // 1 hour
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	// Create a retry transport
+	transport := &retryTransport{
+		base: http.DefaultTransport,
+	}
+
+	client := &http.Client{
+		Transport: transport,
+	}
+
+	// Make a request
+	resp, err := client.Get(server.URL)
+
+	// Assertions
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusTooManyRequests, resp.StatusCode, "Should return 429 without retry")
+	assert.Equal(t, 1, requestCount, "Should not retry with excessive Retry-After")
+	resp.Body.Close()
+}

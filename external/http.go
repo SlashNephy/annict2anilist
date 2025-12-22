@@ -23,6 +23,11 @@ type retryTransport struct {
 	base http.RoundTripper
 }
 
+const (
+	maxRetries       = 5
+	maxRetryAfterSec = 300 // 5 minutes
+)
+
 func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	// Read and store the request body so we can retry if needed
 	var bodyBytes []byte
@@ -35,6 +40,7 @@ func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error
 		request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 
+	retryCount := 0
 	for {
 		// Restore the request body for retry attempts
 		if bodyBytes != nil {
@@ -48,6 +54,15 @@ func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error
 
 		// Check if we got a 429 rate limit error
 		if response.StatusCode == http.StatusTooManyRequests {
+			// Check if we've exceeded max retries
+			if retryCount >= maxRetries {
+				slog.Warn("max retries exceeded for rate limited request",
+					slog.String("url", request.URL.String()),
+					slog.Int("retry_count", retryCount),
+				)
+				return response, nil
+			}
+
 			// Get the Retry-After header
 			retryAfterStr := response.Header.Get("Retry-After")
 			if retryAfterStr == "" {
@@ -56,12 +71,23 @@ func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error
 			}
 
 			// Parse Retry-After header (in seconds)
+			// Note: This implementation only supports delta-seconds format, not HTTP-date format
 			retryAfter, err := strconv.Atoi(retryAfterStr)
 			if err != nil {
 				// If parsing fails, return the error response
 				slog.Warn("failed to parse Retry-After header",
 					slog.String("value", retryAfterStr),
 					slog.String("error", err.Error()),
+				)
+				return response, nil
+			}
+
+			// Validate retry-after value to prevent excessive waiting
+			if retryAfter > maxRetryAfterSec {
+				slog.Warn("retry-after exceeds maximum, returning error",
+					slog.String("url", request.URL.String()),
+					slog.Int("retry_after_seconds", retryAfter),
+					slog.Int("max_seconds", maxRetryAfterSec),
 				)
 				return response, nil
 			}
@@ -74,9 +100,11 @@ func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error
 			slog.Info("rate limited, retrying after delay",
 				slog.String("url", request.URL.String()),
 				slog.Int("retry_after_seconds", retryAfter),
+				slog.Int("retry_attempt", retryCount+1),
 			)
 			time.Sleep(waitDuration)
 
+			retryCount++
 			// Retry the request
 			continue
 		}
@@ -85,6 +113,8 @@ func (t *retryTransport) RoundTrip(request *http.Request) (*http.Response, error
 		return response, nil
 	}
 }
+
+var _ http.RoundTripper = (*retryTransport)(nil)
 
 type loggingTransport struct{}
 
