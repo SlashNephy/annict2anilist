@@ -16,7 +16,6 @@ func NewHttpClient() *http.Client {
 				base: http.DefaultTransport,
 			},
 		},
-		Timeout: 15 * time.Second,
 	}
 }
 
