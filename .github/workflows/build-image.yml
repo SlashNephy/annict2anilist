@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   build:
-    uses: SlashNephy/.github/.github/workflows/docker-build.yml@2b64691f87d64d627f89946fb6f21169ddffc8b0 # master
+    uses: SlashNephy/actions/.github/workflows/build-docker-image.yml@f63926caa7aad32744d96b2129d04ea0d549e9fb # v0.0.5
     with:
       image-name: ghcr.io/slashnephy/annict2anilist
       image-platforms: linux/amd64
