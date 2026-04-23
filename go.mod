@@ -8,7 +8,7 @@ require (
 	github.com/goccy/go-json v0.10.6
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/joho/godotenv v1.5.1
-	github.com/labstack/gommon v0.4.2
+	github.com/labstack/gommon v0.5.0
 	github.com/samber/lo v1.53.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.36.0
