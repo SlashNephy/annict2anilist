@@ -4,7 +4,7 @@ go 1.25.5
 
 require (
 	github.com/caarlos0/env/v11 v11.4.0
-	github.com/cockroachdb/errors v1.12.0
+	github.com/cockroachdb/errors v1.13.0
 	github.com/goccy/go-json v0.10.6
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/joho/godotenv v1.5.1
@@ -20,7 +20,7 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/coder/websocket v1.8.14 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/getsentry/sentry-go v0.40.0 // indirect
+	github.com/getsentry/sentry-go v0.46.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
