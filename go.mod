@@ -1,6 +1,6 @@
 module github.com/SlashNephy/annict2anilist
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/caarlos0/env/v11 v11.4.1
@@ -11,7 +11,7 @@ require (
 	github.com/labstack/gommon v0.5.0
 	github.com/samber/lo v1.53.0
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/oauth2 v0.36.0
+	golang.org/x/oauth2 v0.37.0
 	golang.org/x/sync v0.22.0
 )
 
