@@ -104,6 +104,10 @@ func main() {
 	}
 
 	path := filepath.Join(cfg.TokenDirectory, "untethered.json")
+	if err = os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		slog.Error("failed to create directory for untethered.json", slog.Any("err", err))
+		panic(err)
+	}
 	if err = os.WriteFile(path, content, 0600); err != nil {
 		slog.Error("failed to write untethered.json", slog.Any("err", err))
 		panic(err)
