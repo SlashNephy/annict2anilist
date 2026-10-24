@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -21,8 +20,6 @@ import (
 )
 
 func main() {
-	flag.Parse()
-
 	ctx := context.Background()
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -67,6 +64,10 @@ func authorize(ctx context.Context, config *oauth2.Config, path string) error {
 	// Token -> JSON
 	tokenJson, err := json.Marshal(token)
 	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err = os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return errors.WithStack(err)
 	}
 

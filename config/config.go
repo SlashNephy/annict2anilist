@@ -20,12 +20,24 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	envFile := flag.String("env-file", ".env", "path to .env file")
-	flag.Parse()
+	var envPath string
+	if f := flag.Lookup("env-file"); f != nil {
+		envPath = f.Value.String()
+	} else {
+		flag.StringVar(&envPath, "env-file", ".env", "path to .env file")
+	}
+
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+
+	if envPath == "" {
+		envPath = ".env"
+	}
 
 	// .env がある場合だけ読み込む
-	if _, err := os.Stat(*envFile); !os.IsNotExist(err) {
-		if err = godotenv.Load(*envFile); err != nil {
+	if _, err := os.Stat(envPath); !os.IsNotExist(err) {
+		if err = godotenv.Load(envPath); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
