@@ -62,10 +62,10 @@ func main() {
 
 	armDatabase, err := arm.FetchArmDatabase(ctx, httpClient)
 	if err != nil {
-		slog.Error("failed to fetch arm-supplementary database", slog.Any("err", err))
+		slog.Error("failed to fetch arm database", slog.Any("err", err))
 		panic(err)
 	}
-	slog.Info("fetched arm-supplementary entries", slog.Int("length", len(armDatabase.Entries)))
+	slog.Info("fetched arm entries", slog.Int("length", len(armDatabase.Entries)))
 
 	annictWorks, err := annict.FetchAllWorks(ctx)
 	if err != nil {

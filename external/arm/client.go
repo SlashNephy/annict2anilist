@@ -21,7 +21,7 @@ type ArmEntry struct {
 }
 
 func FetchArmDatabase(ctx context.Context, client *http.Client) (*ArmDatabase, error) {
-	request, err := http.NewRequestWithContext(ctx, "GET", "https://raw.githubusercontent.com/SlashNephy/arm-supplementary/master/dist/arm.json", nil)
+	request, err := http.NewRequestWithContext(ctx, "GET", "https://raw.githubusercontent.com/kawaiioverflow/arm/master/arm.json", nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
