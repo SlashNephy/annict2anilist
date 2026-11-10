@@ -3,7 +3,7 @@ module github.com/SlashNephy/annict2anilist
 go 1.26.0
 
 require (
-	github.com/caarlos0/env/v11 v11.4.1
+	github.com/caarlos0/env/v11 v11.4.2
 	github.com/cockroachdb/errors v1.14.0
 	github.com/goccy/go-json v0.12.0
 	github.com/hasura/go-graphql-client v0.16.0
