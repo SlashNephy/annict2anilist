@@ -8,7 +8,7 @@ RUN go mod download
 COPY ./ ./
 RUN make build-batch
 
-FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+FROM debian:bookworm-slim@sha256:e67eeead736ff7bbe258ef088bff683635c561b1fcfefad0806c1df4ab49ce0e
 WORKDIR /app
 
 RUN groupadd -g 1000 app && useradd -u 1000 -g app app
